@@ -575,11 +575,36 @@ static void MX_USART1_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, HEAT_COOL_7_Pin|HEAT_COOL_8_Pin|HEAT_COOL_3_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, HEAT_COOL_4_Pin|HEAT_COOL_5_Pin|HEAT_COOL_6_Pin|HEAT_COOL_1_Pin
+                          |HEAT_COOL_2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : HEAT_COOL_7_Pin HEAT_COOL_8_Pin HEAT_COOL_3_Pin */
+  GPIO_InitStruct.Pin = HEAT_COOL_7_Pin|HEAT_COOL_8_Pin|HEAT_COOL_3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : HEAT_COOL_4_Pin HEAT_COOL_5_Pin HEAT_COOL_6_Pin HEAT_COOL_1_Pin
+                           HEAT_COOL_2_Pin */
+  GPIO_InitStruct.Pin = HEAT_COOL_4_Pin|HEAT_COOL_5_Pin|HEAT_COOL_6_Pin|HEAT_COOL_1_Pin
+                          |HEAT_COOL_2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 

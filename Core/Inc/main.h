@@ -60,6 +60,54 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define HEAT_COOL_7_Pin GPIO_PIN_13
+#define HEAT_COOL_7_GPIO_Port GPIOC
+#define HEAT_COOL_8_Pin GPIO_PIN_14
+#define HEAT_COOL_8_GPIO_Port GPIOC
+#define HEAT_COOL_3_Pin GPIO_PIN_15
+#define HEAT_COOL_3_GPIO_Port GPIOC
+#define ADC_1_Pin GPIO_PIN_0
+#define ADC_1_GPIO_Port GPIOA
+#define ADC__Pin GPIO_PIN_1
+#define ADC__GPIO_Port GPIOA
+#define CONTROL_3_Pin GPIO_PIN_2
+#define CONTROL_3_GPIO_Port GPIOA
+#define CONTROL_4_Pin GPIO_PIN_3
+#define CONTROL_4_GPIO_Port GPIOA
+#define ADC_3_Pin GPIO_PIN_4
+#define ADC_3_GPIO_Port GPIOA
+#define ADC_4_Pin GPIO_PIN_5
+#define ADC_4_GPIO_Port GPIOA
+#define ADC_5_Pin GPIO_PIN_6
+#define ADC_5_GPIO_Port GPIOA
+#define ADC_6_Pin GPIO_PIN_7
+#define ADC_6_GPIO_Port GPIOA
+#define ADC_7_Pin GPIO_PIN_0
+#define ADC_7_GPIO_Port GPIOB
+#define ADC_8_Pin GPIO_PIN_1
+#define ADC_8_GPIO_Port GPIOB
+#define HEAT_COOL_4_Pin GPIO_PIN_2
+#define HEAT_COOL_4_GPIO_Port GPIOB
+#define HEAT_COOL_5_Pin GPIO_PIN_12
+#define HEAT_COOL_5_GPIO_Port GPIOB
+#define CONTROL_5_Pin GPIO_PIN_13
+#define CONTROL_5_GPIO_Port GPIOB
+#define CONTROL_6_Pin GPIO_PIN_14
+#define CONTROL_6_GPIO_Port GPIOB
+#define HEAT_COOL_6_Pin GPIO_PIN_15
+#define HEAT_COOL_6_GPIO_Port GPIOB
+#define CONTROL_1_Pin GPIO_PIN_15
+#define CONTROL_1_GPIO_Port GPIOA
+#define CONTROL_2_Pin GPIO_PIN_3
+#define CONTROL_2_GPIO_Port GPIOB
+#define CONTROL_7_Pin GPIO_PIN_4
+#define CONTROL_7_GPIO_Port GPIOB
+#define CONTROL_8_Pin GPIO_PIN_5
+#define CONTROL_8_GPIO_Port GPIOB
+#define HEAT_COOL_1_Pin GPIO_PIN_8
+#define HEAT_COOL_1_GPIO_Port GPIOB
+#define HEAT_COOL_2_Pin GPIO_PIN_9
+#define HEAT_COOL_2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
