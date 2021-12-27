@@ -68,8 +68,8 @@ void Error_Handler(void);
 #define HEAT_COOL_3_GPIO_Port GPIOC
 #define ADC_1_Pin GPIO_PIN_0
 #define ADC_1_GPIO_Port GPIOA
-#define ADC__Pin GPIO_PIN_1
-#define ADC__GPIO_Port GPIOA
+#define ADC_2_Pin GPIO_PIN_1
+#define ADC_2_GPIO_Port GPIOA
 #define CONTROL_3_Pin GPIO_PIN_2
 #define CONTROL_3_GPIO_Port GPIOA
 #define CONTROL_4_Pin GPIO_PIN_3
@@ -96,6 +96,8 @@ void Error_Handler(void);
 #define CONTROL_6_GPIO_Port GPIOB
 #define HEAT_COOL_6_Pin GPIO_PIN_15
 #define HEAT_COOL_6_GPIO_Port GPIOB
+#define PWR_EN_Pin GPIO_PIN_8
+#define PWR_EN_GPIO_Port GPIOA
 #define CONTROL_1_Pin GPIO_PIN_15
 #define CONTROL_1_GPIO_Port GPIOA
 #define CONTROL_2_Pin GPIO_PIN_3
