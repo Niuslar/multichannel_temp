@@ -60,6 +60,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define ALARM_Pin GPIO_PIN_13
+#define ALARM_GPIO_Port GPIOC
+#define BREATHING_Pin GPIO_PIN_14
+#define BREATHING_GPIO_Port GPIOC
+#define USART_DE_Pin GPIO_PIN_15
+#define USART_DE_GPIO_Port GPIOC
 #define ADC_1_Pin GPIO_PIN_0
 #define ADC_1_GPIO_Port GPIOA
 #define ADC_2_Pin GPIO_PIN_1
