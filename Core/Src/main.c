@@ -6,13 +6,12 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2022 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
@@ -58,11 +57,11 @@ UART_HandleTypeDef huart1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
-static void MX_I2C1_Init(void);
-static void MX_TIM2_Init(void);
-static void MX_TIM21_Init(void);
-static void MX_TIM22_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_TIM22_Init(void);
+static void MX_I2C1_Init(void);
+static void MX_TIM21_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -101,11 +100,11 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC_Init();
-  MX_I2C1_Init();
-  MX_TIM2_Init();
-  MX_TIM21_Init();
-  MX_TIM22_Init();
   MX_USART1_UART_Init();
+  MX_TIM2_Init();
+  MX_TIM22_Init();
+  MX_I2C1_Init();
+  MX_TIM21_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -536,7 +535,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, ALARM_Pin|BREATHING_Pin|USART_DE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, BREATHING_Pin|USART_DE_Pin|ALARM_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, HEAT_COOL_4_Pin|HEAT_COOL_3_Pin|TEMP_ALT_Pin|HEAT_COOL_5_Pin
@@ -545,8 +544,14 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, PWR_EN_Pin|HEAT_COOL_7_Pin|HEAT_COOL_8_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : ALARM_Pin BREATHING_Pin USART_DE_Pin */
-  GPIO_InitStruct.Pin = ALARM_Pin|BREATHING_Pin|USART_DE_Pin;
+  /*Configure GPIO pin : B1_Pin */
+  GPIO_InitStruct.Pin = B1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : BREATHING_Pin USART_DE_Pin ALARM_Pin */
+  GPIO_InitStruct.Pin = BREATHING_Pin|USART_DE_Pin|ALARM_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -567,6 +572,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 }
 
@@ -606,4 +615,3 @@ void assert_failed(uint8_t *file, uint32_t line)
 }
 #endif /* USE_FULL_ASSERT */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
