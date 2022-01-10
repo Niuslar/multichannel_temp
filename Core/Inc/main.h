@@ -61,7 +61,6 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
-#define B1_EXTI_IRQn EXTI4_15_IRQn
 #define BREATHING_Pin GPIO_PIN_14
 #define BREATHING_GPIO_Port GPIOC
 #define USART_DE_Pin GPIO_PIN_15
@@ -104,10 +103,6 @@ void Error_Handler(void);
 #define HEAT_COOL_7_GPIO_Port GPIOA
 #define HEAT_COOL_8_Pin GPIO_PIN_12
 #define HEAT_COOL_8_GPIO_Port GPIOA
-#define TMS_Pin GPIO_PIN_13
-#define TMS_GPIO_Port GPIOA
-#define TCK_Pin GPIO_PIN_14
-#define TCK_GPIO_Port GPIOA
 #define CONTROL_1_Pin GPIO_PIN_15
 #define CONTROL_1_GPIO_Port GPIOA
 #define CONTROL_2_Pin GPIO_PIN_3
