@@ -8,11 +8,17 @@
 #ifndef INC_ADC_TEMP_H_
 #define INC_ADC_TEMP_H_
 
+#include "main.h"
+
 #define BUF_DATA_LEN 8
+#define ADC_START_BIT 2
+//ADC_RES should change depending on the resolution selected (4096 for 12-bits)
+#define ADC_RES	      4096
+#define ADC_VDDA    (3.3)
 
 
-void temp_init();
-void read_temp_sensors();
+void temp_init(ADC_HandleTypeDef* hadc);
+double *read_temp_sensors();
 
 
 #endif /* INC_ADC_TEMP_H_ */

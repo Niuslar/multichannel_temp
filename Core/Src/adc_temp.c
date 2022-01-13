@@ -7,15 +7,15 @@
 
 #include "adc_temp.h"
 #include "main.h"
+#include <math.h>
 
 //Private variables
 static uint16_t raw_data_buffer[BUF_DATA_LEN];
-static uint8_t converted_data_buf[BUF_DATA_LEN]
-static uint8_t convert_data(uint16_t raw_value);
+static double converted_data_buf[BUF_DATA_LEN];
 
 //Private functions prototypes
 static void calibrate_sensor(uint8_t adc_channel);
-static void convert_data(uint16_t data_buffer);
+static double convert_data(uint16_t raw_value);
 
 
 void temp_init(ADC_HandleTypeDef* hadc)
@@ -35,13 +35,20 @@ void temp_init(ADC_HandleTypeDef* hadc)
 }
 
 
-void read_temp_sensors()
+double *read_temp_sensors()
 {
 	//Loop through each value in the raw_data_buffer and convert it
 	for(int i = 0; i < BUF_DATA_LEN; i++)
 	{
-		convert_data(raw_data_buffer[i]);
+		converted_data_buf[i] = convert_data(raw_data_buffer[i]);
 	}
+
+	//Once all the data has been converted and stored in the buffer, start ADC again
+	volatile uint32_t* ADC_control_reg = (uint32_t*)0x40012408;
+	//Change ADCSTART bit in the ADC control register
+	*ADC_control_reg |= (1 << ADC_START_BIT);
+
+	return converted_data_buf;
 
 }
 
@@ -52,9 +59,24 @@ static void calibrate_sensor(uint8_t adc_channel)
 
 }
 
-static void convert_data(uint16_t raw_value)
+static double convert_data(uint16_t raw_value)
 {
+	double temp_celsius;
 	//Convert raw values (after calibration)
+	//Check the values are within range (2.67 and 0.57V)
+	if(raw_value > 706 || raw_value < 3316)
+	{
+		double voltage = ((double)raw_value/ADC_RES)*ADC_VDDA;
+		//Polynomial equation to convert voltage to Celsius
+		//f(x) = 214 + -166x + 69.7x^2 + -13.4x^3, where x is the voltage
+		temp_celsius = 214 - 166*voltage + 69.7*pow(voltage,2) -13.4*pow(voltage,3);
+	}
+	else
+	{
+		//Return unrealistic value to trigger error
+		temp_celsius = 999.9;
+	}
+	return temp_celsius;
 }
 
 
