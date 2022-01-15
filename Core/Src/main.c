@@ -53,7 +53,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
-uint8_t conv_cmplt_flag = 0;
+float converted_data_buf[BUF_DATA_LEN];
+volatile uint8_t conv_cmplt_flag = 0;
 
 /* USER CODE END PV */
 
@@ -84,9 +85,6 @@ static void MX_TIM21_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	double *temps_p;
-	//Temp array to see the values with the debugger
-	double temps[BUF_DATA_LEN];
 
   /* USER CODE END 1 */
 
@@ -129,12 +127,7 @@ int main(void)
   {
 	if(conv_cmplt_flag == 1)
 	{
-		temps_p = read_temp_sensors();
-		for(int i = 0; i < BUF_DATA_LEN; i++)
-		{
-			temps[i] = *temps_p;
-			temps_p++;
-		}
+		read_temp_sensors();
 		conv_cmplt_flag = 0;
 	}
     /* USER CODE END WHILE */
@@ -192,7 +185,7 @@ void SystemClock_Config(void)
   }
 }
 
-/**
+/*
   * @brief ADC Initialization Function
   * @param None
   * @retval None
