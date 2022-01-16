@@ -14,7 +14,6 @@ static uint16_t raw_data_buffer[NUM_CHANNELS];
 float converted_data_buf[NUM_CHANNELS];
 
 //Private functions prototypes
-static void calibrateSensor(uint8_t adc_channel);
 static float convertData(uint16_t raw_value);
 
 
@@ -31,7 +30,6 @@ void tempInit(ADC_HandleTypeDef* hadc)
 	}
 
 }
-
 
 const float* readTempSensors()
 {
@@ -50,17 +48,9 @@ const float* readTempSensors()
 	return converted_data_buf;
 }
 
-
-//Choose which ADC channel (1-8) to calibrate
-static void calibrateSensor(uint8_t adc_channel)
-{
-
-}
-
 static float convertData(uint16_t raw_value)
 {
 	float temp_celsius;
-	//Convert raw values (after calibration)
 	//Check the values are within range (2.67 and 0.57V)
 	if(raw_value > MIN_VRANGE || raw_value < MAX_VRANGE)
 	{

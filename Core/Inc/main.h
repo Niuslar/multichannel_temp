@@ -121,9 +121,6 @@ void Error_Handler(void);
 #define HEAT_COOL_2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
-//How many timers are available
-#define TIMERS_COUNT 3
-
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
