@@ -53,7 +53,7 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
-float converted_data_buf[BUF_DATA_LEN];
+const float* temp_p;
 volatile uint8_t conv_cmplt_flag = 0;
 
 /* USER CODE END PV */
@@ -117,7 +117,7 @@ int main(void)
   MX_TIM21_Init();
   /* USER CODE BEGIN 2 */
 
-  temp_init(&hadc);
+  tempInit(&hadc);
   HAL_TIM_Base_Init(&htim2);
   /* USER CODE END 2 */
 
@@ -127,7 +127,7 @@ int main(void)
   {
 	if(conv_cmplt_flag == 1)
 	{
-		read_temp_sensors();
+		temp_p = readTempSensors();
 		conv_cmplt_flag = 0;
 	}
     /* USER CODE END WHILE */
@@ -621,7 +621,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
-	//Once the ADC conversion is completed, change flag to trigger reading
 	conv_cmplt_flag = 1;
 }
 

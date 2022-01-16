@@ -10,22 +10,22 @@
 #include <math.h>
 
 //Private variables
-static uint16_t raw_data_buffer[BUF_DATA_LEN];
-extern float converted_data_buf[BUF_DATA_LEN];
+static uint16_t raw_data_buffer[NUM_CHANNELS];
+float converted_data_buf[NUM_CHANNELS];
 
 //Private functions prototypes
-static void calibrate_sensor(uint8_t adc_channel);
-static float convert_data(uint16_t raw_value);
+static void calibrateSensor(uint8_t adc_channel);
+static float convertData(uint16_t raw_value);
 
 
-void temp_init(ADC_HandleTypeDef* hadc)
+void tempInit(ADC_HandleTypeDef* hadc)
 {
 	if(HAL_ADCEx_Calibration_Start(hadc, ADC_SINGLE_ENDED) != HAL_OK)
 	{
 		Error_Handler();
 	}
 
-	if(HAL_ADC_Start_DMA(hadc, (uint32_t*)raw_data_buffer, BUF_DATA_LEN) != HAL_OK)
+	if(HAL_ADC_Start_DMA(hadc, (uint32_t*)raw_data_buffer, NUM_CHANNELS) != HAL_OK)
 	{
 		Error_Handler();
 	}
@@ -33,28 +33,31 @@ void temp_init(ADC_HandleTypeDef* hadc)
 }
 
 
-void read_temp_sensors()
+const float* readTempSensors()
 {
 	//Loop through each value in the raw_data_buffer and convert it
-	for(int i = 0; i < BUF_DATA_LEN; i++)
+	for(int i = 0; i < NUM_CHANNELS; i++)
 	{
-		converted_data_buf[i] = convert_data(raw_data_buffer[i]);
+		converted_data_buf[i] = convertData(raw_data_buffer[i]);
 	}
 
 	//Once all the data has been converted and stored in the buffer, start ADC again
 	volatile uint32_t* ADC_control_reg = (uint32_t*)0x40012408;
+
 	//Change ADCSTART bit in the ADC control register
 	*ADC_control_reg |= (1 << ADC_START_BIT);
+
+	return converted_data_buf;
 }
 
 
 //Choose which ADC channel (1-8) to calibrate
-static void calibrate_sensor(uint8_t adc_channel)
+static void calibrateSensor(uint8_t adc_channel)
 {
 
 }
 
-static float convert_data(uint16_t raw_value)
+static float convertData(uint16_t raw_value)
 {
 	float temp_celsius;
 	//Convert raw values (after calibration)
