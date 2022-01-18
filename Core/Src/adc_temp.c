@@ -1,8 +1,11 @@
-/*
- * adc_temp.c
+/**
  *
- *  Created on: 10 Jan 2022
- *      Author: niuslar
+ * @file  adc_temp.c
+ * @brief This file contains the ADC temperature reading functions
+ */
+
+/*  Created on: 10 Jan 2022
+ *  Author: niuslar
  */
 
 #include "adc_temp.h"
@@ -16,7 +19,11 @@ float converted_data_buf[NUM_CHANNELS];
 //Private functions prototypes
 static float convertData(uint16_t raw_value);
 
-
+/**
+  * @brief Calibrate and Start ADC
+  * @param hadc ADC Handler
+  * @retval None
+  */
 void tempInit(ADC_HandleTypeDef* hadc)
 {
 	if(HAL_ADCEx_Calibration_Start(hadc, ADC_SINGLE_ENDED) != HAL_OK)
@@ -31,6 +38,11 @@ void tempInit(ADC_HandleTypeDef* hadc)
 
 }
 
+/**
+  * @brief Read the temperature from ADC values
+  * @param None
+  * @retval Pointer to array of size NUM_CHANNELS with the temperature in Celsius
+  */
 const float* readTempSensors()
 {
 	//Loop through each value in the raw_data_buffer and convert it

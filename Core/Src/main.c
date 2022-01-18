@@ -102,7 +102,10 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
-  //IMPORTANT NOTE: MX_DMA_Init() needs to be at the top of the list!
+  /**
+   * @bug The STM32 HAL has a bug where MX_DMA_Init() needs to be called before MX_ADC_Init(),
+   * otherwise the DMA does not work.
+   */
 
   /* USER CODE END SysInit */
 
@@ -619,6 +622,8 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+/** ADC Conversion Complete Interrup Callback */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 	conv_cmplt_flag = 1;
