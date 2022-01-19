@@ -1,6 +1,6 @@
 /*
  * @file pid_control.h
- *
+ * @brief PID Control header file
  */
 
 /*  Created on: 11 Jan 2022
@@ -12,12 +12,27 @@
 
 #include "main.h"
 
-#define DEFAULT_SET_POINT	 	2500
-#define MIN_VRANGE   (0.569/ADC_VDDA*(ADC_RES))
-#define MAX_VRANGE	 (2.672/ADC_VDDA*(ADC_RES))
+#define PID_CHANNELS 		8
+#define DEFAULT_SET_POINT	2500
+#define ADC_RES	     		4096
+#define ADC_VDDA     		(3.3)
+#define HEAT_MODE 			0
+#define COOL_MODE 			1
+
+/**
+ * @brief PID Channel configuration struct.
+ */
+typedef struct{
+	TIM_HandleTypeDef* htim; /* Timer handle assigned to this channel */
+	TIM_OC_InitTypeDef* sConfig; /* Timer output compare configuration struct */
+	GPIO_TypeDef* heat_cool_port; /* Port of the heat_cool pin */
+	uint32_t heat_cool_pin;
+	uint32_t timer_channel; /* Timer channel to control the PWM of the main channel */
+	uint8_t main_channel; /* Channel Number 0-7 */
+}pid_channel_config_t;
 
 /* Exported Functions Prototypes */
-void PIDInit();
-void PIDControl(float input);
+void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_config_t* pid_channel);
+void PIDControl(uint16_t input, pid_channel_config_t* pid_channel, uint8_t adc_channel);
 
 #endif /* INC_HEATERS_H_ */
