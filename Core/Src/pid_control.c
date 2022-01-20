@@ -1,4 +1,4 @@
-/*
+/**
  * @file pid_control.c
  * @brief PID Control functions
  */
@@ -14,22 +14,19 @@
 
 
 /* Private variables */
-static uint16_t kp;
-static uint16_t ki;
-static uint16_t kd;
-static int16_t error;
+static float kp = 1;
+static float ki = 1;
+static float kd = 0;
+static int16_t error[PID_CHANNELS];
 static uint16_t set_point = DEFAULT_SET_POINT;
 static uint32_t output ;
-static uint32_t previous_time = 0;
-static uint32_t elapsed_time = 0; /* Elapsed time between each PIDControl() call */
-static uint32_t current_time = 0;
-static uint32_t cum_error = 0; /* Cumulative Error */
-static uint32_t deri_error = 0; /* Derivative of the error */
-static int16_t previous_error = 0; /* Error from the previous reading */
-static uint32_t pwm_pulse = 0;
+static uint32_t previous_time[PID_CHANNELS];
+static uint32_t elapsed_time_ms[PID_CHANNELS]; /* Elapsed time between each PIDControl() call*/
+static uint32_t current_time_ms[PID_CHANNELS];
+static float cum_error[PID_CHANNELS] = {0}; /* Cumulative Error */
+static uint32_t deri_error[PID_CHANNELS] = {0}; /* Derivative of the error */
+static int16_t previous_error[PID_CHANNELS] = {0}; /* Error from the previous reading */
 
-/* Private Functions */
-static uint32_t outputPulse(uint32_t pid_output);
 
 /**
  * @ref TIM_OC_InitTypeDef
@@ -104,36 +101,37 @@ void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_config_t
  */
 void PIDControl(uint16_t input, pid_channel_config_t* pid_channel, uint8_t adc_channel)
 {
-	current_time = HAL_GetTick();
-	elapsed_time = current_time - previous_time;
-	error = set_point - input;
-	cum_error += error * elapsed_time;
-	deri_error = (error - previous_error)/(elapsed_time);
-	output = kp * error + ki * cum_error + kd * deri_error;
+	current_time_ms[adc_channel] = HAL_GetTick();
+	elapsed_time_ms[adc_channel] = (current_time_ms[adc_channel] - previous_time[adc_channel]);
+	error[adc_channel] = set_point - input;
 
-	/* Parameters for next cycle */
-	previous_error = error;
-	previous_time = current_time;
-
-
-	/* If error is negative, then we need to heat */
-	if(error < 0)
+	/* If error is negative, then we need to use the heater */
+	if(error[adc_channel] < 0)
 	{
 		HAL_GPIO_WritePin(pid_channel->heat_cool_port, pid_channel->heat_cool_pin, HEAT_MODE);
+		error[adc_channel] = -error[adc_channel];
 	}
-	else if(error > 0)
+	else if(error[adc_channel] > 0)
 	{
 		HAL_GPIO_WritePin(pid_channel->heat_cool_port, pid_channel->heat_cool_pin, COOL_MODE);
 	}
+
+	cum_error[adc_channel] += error[adc_channel] * elapsed_time_ms[adc_channel];
+	deri_error[adc_channel] = (error[adc_channel] - previous_error[adc_channel])/(elapsed_time_ms[adc_channel]);
+	output = kp * error[adc_channel] + ki * cum_error[adc_channel] + kd * deri_error[adc_channel];
+
+	/* Parameters for next cycle */
+	previous_error[adc_channel] = error[adc_channel];
+	previous_time[adc_channel] = current_time_ms[adc_channel];
 
 	/* Control PWM */
 	/* Because of the timers configuration, the PWM signal frequency is 10KHz
 	 * The duty cycle is calculated as: Pulse/Counter Period
 	 * The counter period is 3200
 	 */
-	pwm_pulse = outputPulse(output);
-	pid_channel->sConfig->Pulse = pwm_pulse;
+	pid_channel->sConfig->Pulse = output;
 	HAL_TIM_PWM_ConfigChannel(pid_channel->htim, pid_channel->sConfig, pid_channel->timer_channel);
+
 }
 
 /**
@@ -148,15 +146,10 @@ void setTargetTemp(float temp)
 	float voltage = 2.85 - 0.00829 * temp - 0.000189 * pow(temp,2) + 0.00000095 * pow(temp,3);
 
 	/* Then transform voltage to digital value */
-	uint16_t digital_value = (uint16_t)(voltage/ADC_VDDA)*ADC_RES;
+	uint16_t digital_value = ((float)voltage/ADC_VDDA)*ADC_RES;
 
 	set_point = digital_value;
 }
 
-static uint32_t outputPulse(uint32_t pid_output)
-{
-	int some_random_value = 20;
-	return pid_output*some_random_value;
-}
 
 

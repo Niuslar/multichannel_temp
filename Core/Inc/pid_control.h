@@ -1,4 +1,4 @@
-/*
+/**
  * @file pid_control.h
  * @brief PID Control header file
  */
@@ -18,6 +18,7 @@
 #define ADC_VDDA     		(3.3)
 #define HEAT_MODE 			0
 #define COOL_MODE 			1
+#define ADC_START_BIT 2
 
 /**
  * @brief PID Channel configuration struct.
@@ -34,5 +35,6 @@ typedef struct{
 /* Exported Functions Prototypes */
 void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_config_t* pid_channel);
 void PIDControl(uint16_t input, pid_channel_config_t* pid_channel, uint8_t adc_channel);
+void setTargetTemp(float temp);
 
 #endif /* INC_HEATERS_H_ */

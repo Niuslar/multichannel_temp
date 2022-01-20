@@ -126,7 +126,7 @@ int main(void)
   tempInit(&hadc);
 
   /* Fill Channels Configuration Array */
-  for(uint8_t channel; channel < PID_CHANNELS; channel++)
+  for(uint8_t channel = 0; channel < PID_CHANNELS; channel++)
   {
 	  /* Channels 1-4 use TIM2 as timer */
 	  if(channel < 4)
@@ -165,6 +165,10 @@ int main(void)
 			PIDControl(raw_data_buffer[i], &pid_channels[i], i);
 		}
 		conv_cmplt_flag = 0;
+
+		/* Change ADCSTART bit in the ADC control register */
+		volatile uint32_t* ADC_control_reg = (uint32_t*)0x40012408;
+		*ADC_control_reg |= (1 << ADC_START_BIT);
 	}
     /* USER CODE END WHILE */
 
