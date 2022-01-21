@@ -12,6 +12,7 @@
 #include "main.h"
 #include <math.h>
 
+
 /* Private variables */
 float converted_data_buf[ADC_CHANNELS];
 static uint16_t raw_data_buffer[ADC_CHANNELS];

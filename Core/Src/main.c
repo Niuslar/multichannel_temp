@@ -24,6 +24,7 @@
 #include "adc_temp.h"
 #include "pid_control.h"
 #include "uart_com.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,6 +55,7 @@ TIM_HandleTypeDef htim22;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
+
 
 const uint16_t* adc_temps;
 pid_channel_config_t pid_channels[PID_CHANNELS];
@@ -172,7 +174,6 @@ int main(void)
 		/* Restart ADC by changing ADCSTART bit in the ADC control register */
 		volatile uint32_t* ADC_control_reg = (uint32_t*)0x40012408;
 		*ADC_control_reg |= (1 << ADC_START_BIT);
-
 
 	}
     /* USER CODE END WHILE */
