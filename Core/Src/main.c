@@ -24,6 +24,7 @@
 #include "adc_temp.h"
 #include "pid_control.h"
 #include "uart_com.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,7 +56,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
-uint16_t raw_data_buffer[ADC_CHANNELS];
+
+const uint16_t* adc_temps;
 pid_channel_config_t pid_channels[PID_CHANNELS];
 volatile uint8_t conv_cmplt_flag = 0;
 
@@ -163,17 +165,21 @@ int main(void)
 		/* PID Control for all the ADC inputs */
 		for(uint8_t i = 0; i < ADC_CHANNELS; i++)
 		{
-			PIDControl(raw_data_buffer[i], &pid_channels[i], i);
+			PIDControl(adc_temps[i], &pid_channels[i], i);
 		}
 		conv_cmplt_flag = 0;
 
-		/* Change ADCSTART bit in the ADC control register */
+		uartSendData(&huart1, SEND_CELSIUS);
+
+		/* Restart ADC by changing ADCSTART bit in the ADC control register */
 		volatile uint32_t* ADC_control_reg = (uint32_t*)0x40012408;
 		*ADC_control_reg |= (1 << ADC_START_BIT);
+
 	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
@@ -590,6 +596,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
+
 
   /* USER CODE END USART1_Init 2 */
 

@@ -27,5 +27,6 @@
 /* Exported Functions Prototypes */
 void tempInit(ADC_HandleTypeDef* hadc);
 const float* readTempSensors();
+const uint16_t* readADCData();
 
 #endif /* INC_ADC_TEMP_H_ */

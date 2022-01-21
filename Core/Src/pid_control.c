@@ -24,7 +24,7 @@ static uint32_t previous_time[PID_CHANNELS];
 static uint32_t elapsed_time_ms[PID_CHANNELS]; /* Elapsed time between each PIDControl() call*/
 static uint32_t current_time_ms[PID_CHANNELS];
 static float cum_error[PID_CHANNELS] = {0}; /* Cumulative Error */
-static uint32_t deri_error[PID_CHANNELS] = {0}; /* Derivative of the error */
+static float deri_error[PID_CHANNELS] = {0}; /* Derivative of the error */
 static int16_t previous_error[PID_CHANNELS] = {0}; /* Error from the previous reading */
 
 
@@ -117,7 +117,7 @@ void PIDControl(uint16_t input, pid_channel_config_t* pid_channel, uint8_t adc_c
 	}
 
 	cum_error[adc_channel] += error[adc_channel] * elapsed_time_ms[adc_channel];
-	deri_error[adc_channel] = (error[adc_channel] - previous_error[adc_channel])/(elapsed_time_ms[adc_channel]);
+	deri_error[adc_channel] = ((float)error[adc_channel] - previous_error[adc_channel])/(elapsed_time_ms[adc_channel]);
 	output = kp * error[adc_channel] + ki * cum_error[adc_channel] + kd * deri_error[adc_channel];
 
 	/* Parameters for next cycle */

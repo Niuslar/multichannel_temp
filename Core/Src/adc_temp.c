@@ -12,11 +12,10 @@
 #include "main.h"
 #include <math.h>
 
-/* Exported variables */
-extern uint16_t raw_data_buffer[ADC_CHANNELS];
 
 /* Private variables */
 float converted_data_buf[ADC_CHANNELS];
+static uint16_t raw_data_buffer[ADC_CHANNELS];
 
 /* Private functions prototypes */
 static float convertData(uint16_t raw_value);
@@ -38,6 +37,16 @@ void tempInit(ADC_HandleTypeDef* hadc)
 		Error_Handler();
 	}
 
+}
+
+/**
+  * @brief Read the 12-bit values
+  * @param None
+  * @retval Pointer to array of size ADC_CHANNELS with the 12-bit ADC values
+  */
+const uint16_t* readADCData()
+{
+	return raw_data_buffer;
 }
 
 /**
