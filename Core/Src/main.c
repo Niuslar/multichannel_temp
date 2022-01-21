@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "adc_temp.h"
+#include "pid_control.h"
+#include "uart_com.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,7 +55,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
-const float* temp_p;
+const uint16_t* adc_temps;
+pid_channel_config_t pid_channels[PID_CHANNELS];
 volatile uint8_t conv_cmplt_flag = 0;
 
 /* USER CODE END PV */
@@ -120,8 +123,35 @@ int main(void)
   MX_TIM21_Init();
   /* USER CODE BEGIN 2 */
 
+  /* Initialise ADC reading */
   tempInit(&hadc);
-  HAL_TIM_Base_Init(&htim2);
+
+  /* Fill Channels Configuration Array */
+  for(uint8_t channel = 0; channel < PID_CHANNELS; channel++)
+  {
+	  /* Channels 1-4 use TIM2 as timer */
+	  if(channel < 4)
+	  {
+		  PIDInit(&htim2, channel, &pid_channels[channel]);
+	  }
+	  /* Channels 5-6 use TIM21 */
+	  else if(channel < 6)
+	  {
+		  PIDInit(&htim21, channel, &pid_channels[channel]);
+	  }
+	  /* Channels 7-8 use TIM22 */
+	  else if(channel < 8)
+	  {
+		  PIDInit(&htim22, channel, &pid_channels[channel]);
+	  }
+	  else
+	  {
+		  Error_Handler();
+	  }
+
+  }
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -130,12 +160,25 @@ int main(void)
   {
 	if(conv_cmplt_flag == 1)
 	{
-		temp_p = readTempSensors();
+		/* PID Control for all the ADC inputs */
+		for(uint8_t i = 0; i < ADC_CHANNELS; i++)
+		{
+			PIDControl(adc_temps[i], &pid_channels[i], i);
+		}
 		conv_cmplt_flag = 0;
+
+		uartSendData(&huart1, SEND_CELSIUS);
+
+		/* Restart ADC by changing ADCSTART bit in the ADC control register */
+		volatile uint32_t* ADC_control_reg = (uint32_t*)0x40012408;
+		*ADC_control_reg |= (1 << ADC_START_BIT);
+
+
 	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
@@ -156,12 +199,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLLMUL_8;
-  RCC_OscInitStruct.PLL.PLLDIV = RCC_PLLDIV_2;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -170,12 +211,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();
   }
@@ -188,7 +229,7 @@ void SystemClock_Config(void)
   }
 }
 
-/*
+/**
   * @brief ADC Initialization Function
   * @param None
   * @retval None
@@ -307,7 +348,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00707CBB;
+  hi2c1.Init.Timing = 0x00303D5B;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -357,9 +398,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 31999;
+  htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 999;
+  htim2.Init.Period = 3199;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -376,7 +417,7 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_ENABLE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
@@ -420,6 +461,7 @@ static void MX_TIM21_Init(void)
 
   /* USER CODE END TIM21_Init 0 */
 
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
@@ -429,9 +471,18 @@ static void MX_TIM21_Init(void)
   htim21.Instance = TIM21;
   htim21.Init.Prescaler = 0;
   htim21.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim21.Init.Period = 65535;
+  htim21.Init.Period = 3199;
   htim21.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim21.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim21) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim21, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   if (HAL_TIM_PWM_Init(&htim21) != HAL_OK)
   {
     Error_Handler();
@@ -482,7 +533,7 @@ static void MX_TIM22_Init(void)
   htim22.Instance = TIM22;
   htim22.Init.Prescaler = 0;
   htim22.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim22.Init.Period = 65535;
+  htim22.Init.Period = 3199;
   htim22.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim22.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim22) != HAL_OK)
@@ -544,6 +595,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
+
 
   /* USER CODE END USART1_Init 2 */
 
