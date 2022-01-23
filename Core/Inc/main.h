@@ -120,7 +120,7 @@ void Error_Handler(void);
 #define HEAT_COOL_2_Pin GPIO_PIN_9
 #define HEAT_COOL_2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-
+#define ADC_CHANNELS 8
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
