@@ -30,11 +30,12 @@ typedef struct{
 	uint32_t heat_cool_pin;
 	uint32_t timer_channel; /* Timer channel to control the PWM of the main channel */
 	uint8_t main_channel; /* Channel Number 0-7 */
-}pid_channel_config_t;
+}pid_channel_handle_t;
 
 /* Exported Functions Prototypes */
-void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_config_t* pid_channel);
-void PIDControl(uint16_t input, pid_channel_config_t* pid_channel, uint8_t adc_channel);
+void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_handle_t* pid_channel);
+void PIDControl(uint16_t input, pid_channel_handle_t* pid_channel, uint8_t adc_channel);
 void setTargetTemp(float temp);
+void disablePID(pid_channel_handle_t* pid_channel);
 
 #endif /* INC_HEATERS_H_ */

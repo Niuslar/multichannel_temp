@@ -40,12 +40,20 @@ void tempInit(ADC_HandleTypeDef* hadc)
 }
 
 /**
-  * @brief Read the 12-bit values
+  * @brief Read the 12-bit values and check values are within range
   * @param None
   * @retval Pointer to array of size ADC_CHANNELS with the 12-bit ADC values
   */
 const uint16_t* readADCData()
 {
+	/* Check values are OK, if not disable PWM */
+	for(uint8_t channel = 0; channel < ADC_CHANNELS; channel++)
+	{
+		if(raw_data_buffer[channel] < MIN_VRANGE || raw_data_buffer[channel] > MAX_VRANGE)
+		{
+			temp_error();
+		}
+	}
 	return raw_data_buffer;
 }
 
@@ -84,8 +92,8 @@ static float convertData(uint16_t raw_value)
 	}
 	else
 	{
-		/* Return unrealistic value to trigger error */
-		temp_celsius = 999.9;
+		/* Trigger temp error */
+		temp_error();
 	}
 	return temp_celsius;
 }

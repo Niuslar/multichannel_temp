@@ -55,6 +55,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+void temp_error();
 
 /* USER CODE END EFP */
 
@@ -121,6 +122,8 @@ void Error_Handler(void);
 #define HEAT_COOL_2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 #define ADC_CHANNELS 8
+#define HIGH 		 1
+#define LOW			 0
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

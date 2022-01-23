@@ -58,7 +58,7 @@ UART_HandleTypeDef huart1;
 
 
 const uint16_t* adc_temps;
-pid_channel_config_t pid_channels[PID_CHANNELS];
+pid_channel_handle_t pid_channels[PID_CHANNELS];
 volatile uint8_t conv_cmplt_flag = 0;
 
 /* USER CODE END PV */
@@ -676,6 +676,21 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+/**
+  * @brief In case of temperatures outside of range, disable the heaters and coolers and raise alarm
+  * @param None
+  * @retval None
+  */
+void temp_error()
+{
+	/* Stop PWM for all channels */
+	disablePID(pid_channels);
+
+	/* Raise alarm */
+	HAL_GPIO_WritePin(ALARM_GPIO_Port, ALARM_Pin, HIGH);
+
+}
+
 /** ADC Conversion Complete Interrup Callback */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
@@ -693,6 +708,7 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+
   while (1)
   {
   }

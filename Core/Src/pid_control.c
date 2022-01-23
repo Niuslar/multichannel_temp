@@ -14,9 +14,9 @@
 
 
 /* Private variables */
-static float kp = 1;
-static float ki = 1;
-static float kd = 0;
+static float kp, kp_cooler, kp_heater;
+static float ki, ki_cooler, ki_heater;
+static float kd, kd_cooler, kd_heater;
 static int16_t error[PID_CHANNELS];
 static uint16_t set_point = DEFAULT_SET_POINT;
 static uint32_t output ;
@@ -46,7 +46,7 @@ static TIM_OC_InitTypeDef pwm_config = {
  * @param pid_channel configuration struct to be filled
  * @return None
  */
-void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_config_t* pid_channel)
+void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_handle_t* pid_channel)
 {
 	/* Set pid_channel_config parameters */
 	pid_channel->htim = htim;
@@ -99,7 +99,7 @@ void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_config_t
  * @param adc_channel where the reading comes from (0-7)
  * @return None
  */
-void PIDControl(uint16_t input, pid_channel_config_t* pid_channel, uint8_t adc_channel)
+void PIDControl(uint16_t input, pid_channel_handle_t* pid_channel, uint8_t adc_channel)
 {
 	current_time_ms[adc_channel] = HAL_GetTick();
 	elapsed_time_ms[adc_channel] = (current_time_ms[adc_channel] - previous_time[adc_channel]);
@@ -110,16 +110,21 @@ void PIDControl(uint16_t input, pid_channel_config_t* pid_channel, uint8_t adc_c
 	{
 		HAL_GPIO_WritePin(pid_channel->heat_cool_port, pid_channel->heat_cool_pin, HEAT_MODE);
 		error[adc_channel] = -error[adc_channel];
+		kp = kp_heater;
+		ki = ki_heater;
+		kd = kd_heater;
 	}
 	else if(error[adc_channel] > 0)
 	{
 		HAL_GPIO_WritePin(pid_channel->heat_cool_port, pid_channel->heat_cool_pin, COOL_MODE);
+		kp = kp_cooler;
+		ki = ki_cooler;
+		kd = kd_cooler;
 	}
 
 	cum_error[adc_channel] += error[adc_channel] * elapsed_time_ms[adc_channel];
 	deri_error[adc_channel] = ((float)error[adc_channel] - previous_error[adc_channel])/(elapsed_time_ms[adc_channel]);
 	output = kp * error[adc_channel] + ki * cum_error[adc_channel] + kd * deri_error[adc_channel];
-
 	/* Parameters for next cycle */
 	previous_error[adc_channel] = error[adc_channel];
 	previous_time[adc_channel] = current_time_ms[adc_channel];
@@ -150,6 +155,21 @@ void setTargetTemp(float temp)
 
 	set_point = digital_value;
 }
+
+/**
+ * @brief Disable Heaters and Coolers in case of temperature error
+ * param Pointer to PID channels handle array
+ * @return None
+ */
+void disablePID(pid_channel_handle_t* pid_channel)
+{
+	for(uint8_t channel = 0; channel < PID_CHANNELS; channel++)
+	{
+		HAL_TIM_PWM_Stop(pid_channel[channel].htim, pid_channel[channel].timer_channel);
+	}
+}
+
+
 
 
 
