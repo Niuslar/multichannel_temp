@@ -58,7 +58,6 @@ UART_HandleTypeDef huart1;
 
 
 const uint16_t* adc_temps;
-pid_channel_config_t pid_channels[PID_CHANNELS];
 volatile uint8_t conv_cmplt_flag = 0;
 
 /* USER CODE END PV */
@@ -128,32 +127,6 @@ int main(void)
   /* Initialise ADC reading */
   tempInit(&hadc);
 
-  /* Fill Channels Configuration Array */
-  for(uint8_t channel = 0; channel < PID_CHANNELS; channel++)
-  {
-	  /* Channels 1-4 use TIM2 as timer */
-	  if(channel < 4)
-	  {
-		  PIDInit(&htim2, channel, &pid_channels[channel]);
-	  }
-	  /* Channels 5-6 use TIM21 */
-	  else if(channel < 6)
-	  {
-		  PIDInit(&htim21, channel, &pid_channels[channel]);
-	  }
-	  /* Channels 7-8 use TIM22 */
-	  else if(channel < 8)
-	  {
-		  PIDInit(&htim22, channel, &pid_channels[channel]);
-	  }
-	  else
-	  {
-		  Error_Handler();
-	  }
-
-  }
-
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -162,14 +135,10 @@ int main(void)
   {
 	if(conv_cmplt_flag == 1)
 	{
-		/* PID Control for all the ADC inputs */
-		for(uint8_t i = 0; i < ADC_CHANNELS; i++)
-		{
-			PIDControl(adc_temps[i], &pid_channels[i], i);
-		}
-		conv_cmplt_flag = 0;
 
 		uartSendData(&huart1, SEND_CELSIUS);
+		conv_cmplt_flag = 0;
+
 
 		/* Restart ADC by changing ADCSTART bit in the ADC control register */
 		volatile uint32_t* ADC_control_reg = (uint32_t*)0x40012408;
