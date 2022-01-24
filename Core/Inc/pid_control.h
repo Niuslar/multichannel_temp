@@ -12,29 +12,28 @@
 
 #include "main.h"
 
-#define PID_CHANNELS 		8
-#define DEFAULT_SET_POINT	2500
-#define ADC_RES	     		4096
-#define ADC_VDDA     		(3.3)
-#define HEAT_MODE 			0
-#define COOL_MODE 			1
-#define ADC_START_BIT 2
+#define DEFAULT_TARGET  200
+#define DEFAULT_KP		1
+#define DEFAULT_KI		0
+#define DEFAULT_KD		0
 
 /**
- * @brief PID Channel configuration struct.
+ * @brief PID Handler
  */
 typedef struct{
-	TIM_HandleTypeDef* htim; /* Timer handle assigned to this channel */
-	TIM_OC_InitTypeDef* sConfig; /* Timer output compare configuration struct */
-	GPIO_TypeDef* heat_cool_port; /* Port of the heat_cool pin */
-	uint32_t heat_cool_pin;
-	uint32_t timer_channel; /* Timer channel to control the PWM of the main channel */
-	uint8_t main_channel; /* Channel Number 0-7 */
-}pid_channel_config_t;
+	float kp;
+	float ki;
+	float kd;
+	float set_point;
+	float prev_output;
+	float prev_error;
+	float cum_error;
+	uint32_t previous_time;
+}pid_handle_t;
 
 /* Exported Functions Prototypes */
-void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_config_t* pid_channel);
-void PIDControl(uint16_t input, pid_channel_config_t* pid_channel, uint8_t adc_channel);
-void setTargetTemp(float temp);
+void PIDInit(pid_handle_t* pid_handler);
+float PIDControlOutput(pid_handle_t* pid_handler, float input);
+void setPIDTarget(pid_handle_t* pid_handler, float target);
 
 #endif /* INC_HEATERS_H_ */
