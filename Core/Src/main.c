@@ -112,20 +112,20 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
   /**
-   * @bug The STM32 HAL has a bug where MX_DMA_Init() needs to be called before MX_ADC_Init(),
+   * @note The STM32 HAL has a bug where MX_DMA_Init() needs to be called before the rest,
    * otherwise the DMA does not work.
    */
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+  MX_DMA_Init();
   MX_GPIO_Init();
   MX_ADC_Init();
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   MX_TIM22_Init();
   MX_I2C1_Init();
-  MX_DMA_Init();
   MX_TIM21_Init();
   MX_LPUART1_UART_Init();
   MX_USART2_UART_Init();
