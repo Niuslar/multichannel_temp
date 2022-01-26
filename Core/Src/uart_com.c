@@ -53,7 +53,7 @@ void uartSendData(UART_HandleTypeDef *huart, uint8_t adc_or_celsius)
 				}
 			}
 
-			if(HAL_OK != HAL_UART_Transmit(huart, (uint8_t*)uart_tx_buf, TX_MSG_LEN, UART_TIMEOUT))
+			if(HAL_OK != HAL_UART_Transmit(huart, (uint8_t*)uart_tx_buf, strlen(uart_tx_buf)+1, UART_TIMEOUT))
 			{
 				Error_Handler();
 			}
@@ -76,7 +76,7 @@ void uartSendData(UART_HandleTypeDef *huart, uint8_t adc_or_celsius)
 				}
 			}
 
-			if(HAL_OK != HAL_UART_Transmit(huart, (uint8_t*)uart_tx_buf, TX_MSG_LEN, UART_TIMEOUT))
+			if(HAL_OK != HAL_UART_Transmit(huart, (uint8_t*)uart_tx_buf, strlen(uart_tx_buf)+1, UART_TIMEOUT))
 			{
 				Error_Handler();
 			}
