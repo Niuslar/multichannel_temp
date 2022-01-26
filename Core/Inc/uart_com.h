@@ -18,6 +18,7 @@
 #define UART_TIMEOUT	40
 #define SEND_ADC		0
 #define SEND_CELSIUS	1
+#define TX_MSG_LEN		24
 
 
 /* Exported Function Prototypes */
