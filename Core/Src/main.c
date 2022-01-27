@@ -175,7 +175,7 @@ int main(void)
 		}
 		conv_cmplt_flag = 0;
 
-		uartSendData(&huart1, SEND_CELSIUS);
+		uartSendData(&huart2, SEND_CELSIUS);
 
 		/* Restart ADC by changing ADCSTART bit in the ADC control register */
 		volatile uint32_t* ADC_control_reg = (uint32_t*)0x40012408;
