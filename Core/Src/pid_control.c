@@ -9,147 +9,132 @@
 
 
 #include "pid_control.h"
-#include "main.h"
 #include "math.h"
+#include <float.h>
+
+/* Private defines */
+#define DEFAULT_KP		1
+#define DEFAULT_KI		0
+#define DEFAULT_KD		0
+
+/* local PFP. */
+float checkLimits(float value, float max_limit, float min_limit);
 
 
-/* Private variables */
-static float kp = 1;
-static float ki = 1;
-static float kd = 0;
-static int16_t error[PID_CHANNELS];
-static uint16_t set_point = DEFAULT_SET_POINT;
-static uint32_t output ;
-static uint32_t previous_time[PID_CHANNELS];
-static uint32_t elapsed_time_ms[PID_CHANNELS]; /* Elapsed time between each PIDControl() call*/
-static uint32_t current_time_ms[PID_CHANNELS];
-static float cum_error[PID_CHANNELS] = {0}; /* Cumulative Error */
-static float deri_error[PID_CHANNELS] = {0}; /* Derivative of the error */
-static int16_t previous_error[PID_CHANNELS] = {0}; /* Error from the previous reading */
-
-
-/**
- * @ref TIM_OC_InitTypeDef
- */
-static TIM_OC_InitTypeDef pwm_config = {
-	.OCFastMode = TIM_OCFAST_DISABLE,
-	.OCMode		= TIM_OCMODE_PWM1,
-	.OCPolarity = TIM_OCPOLARITY_HIGH,
-	.Pulse		= 0x0000
-};
-
-
-/**
- * @brief Set parameters and start PWM with a duty cycle of 0%
- * @param htim TIM handle
- * @param main_channel is the Control Channel (0-7)
- * @param pid_channel configuration struct to be filled
- * @return None
- */
-void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_config_t* pid_channel)
+void initPID(pid_handle_t* p_pid_handler)
 {
-	/* Set pid_channel_config parameters */
-	pid_channel->htim = htim;
-	pid_channel->main_channel = main_channel;
-	pid_channel->sConfig = &pwm_config;
+	p_pid_handler->kd = DEFAULT_KD;
+	p_pid_handler->ki = DEFAULT_KI;
+	p_pid_handler->kp = DEFAULT_KP;
 
-	switch(main_channel){
-	case 0:
-		pid_channel->heat_cool_port = HEAT_COOL_1_GPIO_Port;
-		pid_channel->heat_cool_pin	= HEAT_COOL_1_Pin;
-		pid_channel->timer_channel = TIM_CHANNEL_1;
-	case 1:
-		pid_channel->heat_cool_port = HEAT_COOL_2_GPIO_Port;
-		pid_channel->heat_cool_pin	= HEAT_COOL_2_Pin;
-		pid_channel->timer_channel = TIM_CHANNEL_2;
-	case 2:
-		pid_channel->heat_cool_port = HEAT_COOL_3_GPIO_Port;
-		pid_channel->heat_cool_pin	= HEAT_COOL_3_Pin;
-		pid_channel->timer_channel = TIM_CHANNEL_3;
-	case 3:
-		pid_channel->heat_cool_port = HEAT_COOL_4_GPIO_Port;
-		pid_channel->heat_cool_pin	= HEAT_COOL_4_Pin;
-		pid_channel->timer_channel = TIM_CHANNEL_4;
-	case 4:
-		pid_channel->heat_cool_port = HEAT_COOL_5_GPIO_Port;
-		pid_channel->heat_cool_pin	= HEAT_COOL_5_Pin;
-		pid_channel->timer_channel = TIM_CHANNEL_1;
-	case 5:
-		pid_channel->heat_cool_port = HEAT_COOL_6_GPIO_Port;
-		pid_channel->heat_cool_pin	= HEAT_COOL_6_Pin;
-		pid_channel->timer_channel = TIM_CHANNEL_2;
-	case 6:
-		pid_channel->heat_cool_port = HEAT_COOL_7_GPIO_Port;
-		pid_channel->heat_cool_pin	= HEAT_COOL_7_Pin;
-		pid_channel->timer_channel = TIM_CHANNEL_1;
-	case 7:
-		pid_channel->heat_cool_port = HEAT_COOL_8_GPIO_Port;
-		pid_channel->heat_cool_pin	= HEAT_COOL_8_Pin;
-		pid_channel->timer_channel = TIM_CHANNEL_2;
-	}
 
-	/* Start PWM */
-	HAL_TIM_PWM_Start(htim, pid_channel->timer_channel);
+#ifdef LIMIT_CHECKING
+	p_pid_handler->max_p = FLT_MAX;
+	p_pid_handler->min_p = -FLT_MAX;
+	p_pid_handler->max_i = FLT_MAX;
+	p_pid_handler->min_i = -FLT_MAX;
+	p_pid_handler->max_d = FLT_MAX;
+	p_pid_handler->min_d = -FLT_MAX;;
+	p_pid_handler->max_out = FLT_MAX;
+	p_pid_handler->min_out = -FLT_MAX;
+#endif
+	resetPID(p_pid_handler);
 }
 
-/**
- * @brief Calculate control output
- * @param ADC reading as input
- * @param pid_channel configuration struct
- * @param adc_channel where the reading comes from (0-7)
- * @return None
- */
-void PIDControl(uint16_t input, pid_channel_config_t* pid_channel, uint8_t adc_channel)
-{
-	current_time_ms[adc_channel] = HAL_GetTick();
-	elapsed_time_ms[adc_channel] = (current_time_ms[adc_channel] - previous_time[adc_channel]);
-	error[adc_channel] = set_point - input;
 
-	/* If error is negative, then we need to use the heater */
-	if(error[adc_channel] < 0)
+void resetPID(pid_handle_t* p_pid_handler)
+{
+	p_pid_handler->old_output = 0;
+	p_pid_handler->old_error = 0;
+	p_pid_handler->old_integral = 0;
+}
+
+
+float runPID(pid_handle_t* p_pid_handler, float target_value, float actual_value)
+{
+	if(p_pid_handler == NULL)
 	{
-		HAL_GPIO_WritePin(pid_channel->heat_cool_port, pid_channel->heat_cool_pin, HEAT_MODE);
-		error[adc_channel] = -error[adc_channel];
+		return 0;
 	}
-	else if(error[adc_channel] > 0)
+
+	float output = p_pid_handler->old_integral;
+	float pid_value;
+	float error = target_value - actual_value;
+
+	/* proportional coefficient */
+	if(p_pid_handler->kp != 0)
 	{
-		HAL_GPIO_WritePin(pid_channel->heat_cool_port, pid_channel->heat_cool_pin, COOL_MODE);
+		pid_value = error * p_pid_handler->kp;
+#ifdef LIMIT_CHECKING
+		pid_value = checkLimits(pid_value, p_pid_handler->max_p, p_pid_handler->min_p);
+#endif
+		output += pid_value;
 	}
 
-	cum_error[adc_channel] += error[adc_channel] * elapsed_time_ms[adc_channel];
-	deri_error[adc_channel] = ((float)error[adc_channel] - previous_error[adc_channel])/(elapsed_time_ms[adc_channel]);
-	output = kp * error[adc_channel] + ki * cum_error[adc_channel] + kd * deri_error[adc_channel];
+	/* differential coefficient */
+	if(p_pid_handler->kd != 0)
+	{
+		/*for now we assume that this loop is called at regular intervals, so
+		 * no timing is necessary. */
+		pid_value = (error - p_pid_handler->old_error) * p_pid_handler->ki;
+#ifdef LIMIT_CHECKING
+		pid_value = checkLimits(pid_value, p_pid_handler->max_d, p_pid_handler->min_d);
+#endif
+		output += pid_value;
+	}
 
-	/* Parameters for next cycle */
-	previous_error[adc_channel] = error[adc_channel];
-	previous_time[adc_channel] = current_time_ms[adc_channel];
+	/* integral coefficient. this is done somewhat out of regular sequence to
+	 * facilitate limit checking of the integral accumulator and output. */
+	if(p_pid_handler->ki != 0)
+	{
+		/*for now we assume that this loop is called at regular intervals, so
+		 * no timing is necessary. */
+		pid_value = error * p_pid_handler->ki;
+#ifdef LIMIT_CHECKING
+		pid_value = checkLimits(pid_value, p_pid_handler->max_i, p_pid_handler->min_i);
+#endif
+		output += pid_value;
 
-	/* Control PWM */
-	/* Because of the timers configuration, the PWM signal frequency is 10KHz
-	 * The duty cycle is calculated as: Pulse/Counter Period
-	 * The counter period is 3200
-	 */
-	pid_channel->sConfig->Pulse = output;
-	HAL_TIM_PWM_ConfigChannel(pid_channel->htim, pid_channel->sConfig, pid_channel->timer_channel);
-
+#ifdef LIMIT_CHECKING
+		/* If output is saturated at max or min limits, then integral
+		 * accumulator should be prevented from incrementing/decrementing. */
+		if(output > p_pid_handler->max_out){
+			output = p_pid_handler->max_out;
+			/* since output is saturated at max value, prevent integral from increasing.*/
+			if(pid_value > 0)
+			{
+				pid_value = 0;
+			}
+		}
+		if(output < p_pid_handler->min_out){
+			output = p_pid_handler->min_out;
+			/* since output is saturated at min value, prevent integral from decreasing.*/
+			if(pid_value < 0)
+			{
+				pid_value = 0;
+			}
+		}
+#endif
+	}
+	p_pid_handler->old_error = error;
+	p_pid_handler->old_integral += pid_value;
+	p_pid_handler->old_output = output;
+	return output;
 }
 
-/**
- * @brief Set the target temperature for the system
- * @param temperature in celsius
- * @return None
- */
-void setTargetTemp(float temp)
+
+#ifdef LIMIT_CHECKING
+float checkLimits(float value, float max_limit, float min_limit)
 {
-	/* First convert celsius to voltage using a polynomial approximation */
-	/* 2.85 + -8.29E-03x + -1.89E-04x^2 + 9.5E-07x^3 */
-	float voltage = 2.85 - 0.00829 * temp - 0.000189 * pow(temp,2) + 0.00000095 * pow(temp,3);
-
-	/* Then transform voltage to digital value */
-	uint16_t digital_value = ((float)voltage/ADC_VDDA)*ADC_RES;
-
-	set_point = digital_value;
+	if(value > max_limit)
+	{
+		value = max_limit;
+	}
+	if(value < min_limit)
+	{
+		value = min_limit;
+	}
+	return value;
 }
-
-
+#endif
 

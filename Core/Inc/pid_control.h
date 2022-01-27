@@ -7,34 +7,67 @@
  *      Author: niuslar
  */
 
-#ifndef INC_HEATERS_H_
-#define INC_HEATERS_H_
+#ifndef PID_CONTROL_H_
+#define PID_CONTROL_H_
 
-#include "main.h"
 
-#define PID_CHANNELS 		8
-#define DEFAULT_SET_POINT	2500
-#define ADC_RES	     		4096
-#define ADC_VDDA     		(3.3)
-#define HEAT_MODE 			0
-#define COOL_MODE 			1
-#define ADC_START_BIT 2
+/* uncomment this line if you want PID loop to perform limit checking of variables. */
+//#define LIMIT_CHECKING
 
 /**
- * @brief PID Channel configuration struct.
+ * @brief PID Handler
+ *
+ * This structure contains all information for a specific PID loop to function.
+ * For each instance of the loop, declare a single structure and then call
+ * initialisation function for it.
  */
 typedef struct{
-	TIM_HandleTypeDef* htim; /* Timer handle assigned to this channel */
-	TIM_OC_InitTypeDef* sConfig; /* Timer output compare configuration struct */
-	GPIO_TypeDef* heat_cool_port; /* Port of the heat_cool pin */
-	uint32_t heat_cool_pin;
-	uint32_t timer_channel; /* Timer channel to control the PWM of the main channel */
-	uint8_t main_channel; /* Channel Number 0-7 */
-}pid_channel_config_t;
+	float kp;
+	float ki;
+	float kd;
+#ifdef LIMIT_CHECKING
+	float max_p;
+	float min_p;
+	float max_i;
+	float min_i;
+	float max_d;
+	float min_d;
+	float max_out;
+	float min_out;
+#endif
+	float old_output;
+	float old_error;
+	float old_integral;
+}pid_handle_t;
 
 /* Exported Functions Prototypes */
-void PIDInit(TIM_HandleTypeDef* htim, uint8_t main_channel, pid_channel_config_t* pid_channel);
-void PIDControl(uint16_t input, pid_channel_config_t* pid_channel, uint8_t adc_channel);
-void setTargetTemp(float temp);
 
-#endif /* INC_HEATERS_H_ */
+/**
+ * @brief Initialise newly created PID control structure.
+ *
+ * This will also reset all parameters to default values except control
+ * coefficients.
+ *
+ * @param p_pid_handler Pointer to the PID handler data structure.
+ */
+void initPID(pid_handle_t* p_pid_handler);
+
+/**
+ * @brief Reset PID control to freshly initialised state.
+ *
+ * @param p_pid_handler Pointer to the PID handler data structure.
+ */
+void resetPID(pid_handle_t* p_pid_handler);
+
+/**
+ * @brief Run PID loop once and calculate new output.
+ *
+ * @param p_pid_handler Pointer to the PID handler data structure.
+ * @param target_value Target value for the control variable.
+ * @param actual_value Actual value of the control variable.
+ *
+ * @return New output of the PID loop.
+ */
+float runPID(pid_handle_t* p_pid_handler, float target_value, float actual_value);
+
+#endif /* PID_CONTROL_H_ */
