@@ -48,7 +48,7 @@ void uartSendData(UART_HandleTypeDef *huart, uint8_t adc_or_celsius)
 				}
 				if(channel == ADC_CHANNELS-1)
 				{
-					sprintf(tmp_string, "%d);\n", tmp_p[channel]);
+					sprintf(tmp_string, "%d);", tmp_p[channel]);
 					strcat(uart_tx_buf, tmp_string);
 				}
 			}
@@ -71,7 +71,7 @@ void uartSendData(UART_HandleTypeDef *huart, uint8_t adc_or_celsius)
 				}
 				if(channel == ADC_CHANNELS-1)
 				{
-					sprintf(tmp_string, "%.2f);\n", tmp_p[channel]);
+					sprintf(tmp_string, "%.2f);", tmp_p[channel]);
 					strcat(uart_tx_buf, tmp_string);
 				}
 			}
