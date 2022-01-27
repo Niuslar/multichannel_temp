@@ -12,7 +12,7 @@
 #include "math.h"
 #include <float.h>
 
-// these values don't need to be visible from outside, so moved them to .c
+/* Private defines */
 #define DEFAULT_KP		1
 #define DEFAULT_KI		0
 #define DEFAULT_KD		0
@@ -20,13 +20,14 @@
 /* local PFP. */
 float checkLimits(float value, float max_limit, float min_limit);
 
-// doxygen comments should live in a .h file, not .c file. This is purely implementation.
+
 void initPID(pid_handle_t* p_pid_handler)
 {
 	p_pid_handler->kd = DEFAULT_KD;
 	p_pid_handler->ki = DEFAULT_KI;
 	p_pid_handler->kp = DEFAULT_KP;
-	//conditional compilation that can be toggled if necessary
+
+
 #ifdef LIMIT_CHECKING
 	p_pid_handler->max_p = FLT_MAX;
 	p_pid_handler->min_p = -FLT_MAX;
@@ -51,7 +52,6 @@ void resetPID(pid_handle_t* p_pid_handler)
 
 float runPID(pid_handle_t* p_pid_handler, float target_value, float actual_value)
 {
-	//input sanitisation
 	if(p_pid_handler == NULL)
 	{
 		return 0;

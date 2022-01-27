@@ -10,9 +10,8 @@
 #ifndef PID_CONTROL_H_
 #define PID_CONTROL_H_
 
-// this file should contain only things that you want visible from outside the module.
 
-// uncomment this line if you want PID loop to perform limit checking of variables.
+/* uncomment this line if you want PID loop to perform limit checking of variables. */
 //#define LIMIT_CHECKING
 
 /**
