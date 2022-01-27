@@ -10,91 +10,110 @@
 
 #include "main.h"
 #include "uart_com.h"
-#include "adc_temp.h"
+#include "adc_data.h"
 #include "stdio.h"
 #include "string.h"
 
 /* Private variables */
 static uint32_t time_stamp = 0;
-static uint32_t send_delay = 50; /* Min time delay between calls in ms*/
 static char uart_tx_buf[TX_MSG_LEN];
 static char tmp_string[TMP_STRING_LEN];
 
 /**
   * @brief Sends selected data via blocking UART
-  * @note This function will send data at a min of "send_delay" intervals in ms
   * @param huart handle
-  * @param raw_or_celsius can be either SEND_ADC or SEND_CELSIUS
+  * @param adc_data_type can be of the type SEND_ADC | SEND_CELSIUS | SEND_TELE
   * @retval None
   */
-void uartSendData(UART_HandleTypeDef *huart, uint8_t adc_or_celsius)
+void uartSendData(UART_HandleTypeDef *huart, uint8_t adc_data_type)
 {
-	/* Send data after selected time delay */
-	if((HAL_GetTick() - time_stamp) > send_delay)
+
+	/* Enable UART Pin*/
+	HAL_GPIO_WritePin(USART_DE_GPIO_Port, USART_DE_Pin, UART_ENABLE);
+
+	if(adc_data_type == SEND_ADC)
 	{
-		/* Enable UART Pin*/
-		HAL_GPIO_WritePin(USART_DE_GPIO_Port, USART_DE_Pin, UART_ENABLE);
-
-		if(adc_or_celsius == SEND_ADC)
+		const uint16_t* tmp_p = readADCData();
+		strcat(uart_tx_buf, ">adc(");
+		for(uint8_t channel = 0; channel < ADC_CHANNELS; channel++)
 		{
-			const uint16_t* tmp_p = readADCData();
-			strcat(uart_tx_buf, ">adc(");
-			for(uint8_t channel = 0; channel < ADC_CHANNELS; channel++)
+			if(channel < ADC_CHANNELS-1)
 			{
-				if(channel < ADC_CHANNELS-1)
-				{
-					sprintf(tmp_string, "%d,", tmp_p[channel]);
-					strcat(uart_tx_buf, tmp_string);
-				}
-				if(channel == ADC_CHANNELS-1)
-				{
-					sprintf(tmp_string, "%d);\n", tmp_p[channel]);
-					strcat(uart_tx_buf, tmp_string);
-				}
+				sprintf(tmp_string, "%d,", tmp_p[channel]);
+				strcat(uart_tx_buf, tmp_string);
 			}
-
-			if(HAL_OK != HAL_UART_Transmit(huart, (uint8_t*)uart_tx_buf, strlen(uart_tx_buf)+1, UART_TIMEOUT))
+			if(channel == ADC_CHANNELS-1)
 			{
-				Error_Handler();
-			}
-		}
-		else if(adc_or_celsius == SEND_CELSIUS)
-		{
-			const float* tmp_p = readTempSensors();
-			strcat(uart_tx_buf, ">temp(");
-			for(uint8_t channel = 0; channel < ADC_CHANNELS; channel++)
-			{
-				if(channel < ADC_CHANNELS-1)
-				{
-					sprintf(tmp_string, "%.2f,", tmp_p[channel]);
-					strcat(uart_tx_buf, tmp_string);
-				}
-				if(channel == ADC_CHANNELS-1)
-				{
-					sprintf(tmp_string, "%.2f);\n", tmp_p[channel]);
-					strcat(uart_tx_buf, tmp_string);
-				}
-			}
-
-			if(HAL_OK != HAL_UART_Transmit(huart, (uint8_t*)uart_tx_buf, strlen(uart_tx_buf)+1, UART_TIMEOUT))
-			{
-				Error_Handler();
+				sprintf(tmp_string, "%d);\n", tmp_p[channel]);
+				strcat(uart_tx_buf, tmp_string);
 			}
 		}
 
-		else
+		if(HAL_OK != HAL_UART_Transmit(huart, (uint8_t*)uart_tx_buf, strlen(uart_tx_buf)+1, UART_TIMEOUT))
 		{
 			Error_Handler();
 		}
-
-		/* Reset buffer */
-		uart_tx_buf[0] = '\0';
-
-		time_stamp = HAL_GetTick();
-
-		/* Disable UART Pin*/
-		HAL_GPIO_WritePin(USART_DE_GPIO_Port, USART_DE_Pin, UART_DISABLE);
 	}
+	else if(adc_data_type == SEND_CELSIUS)
+	{
+		const float* tmp_p = readTempSensors();
+		strcat(uart_tx_buf, ">temp(");
+		for(uint8_t channel = 0; channel < TEMP_CHANNELS; channel++)
+		{
+			if(channel < TEMP_CHANNELS-1)
+			{
+				sprintf(tmp_string, "%.2f,", tmp_p[channel]);
+				strcat(uart_tx_buf, tmp_string);
+			}
+			if(channel == TEMP_CHANNELS-1)
+			{
+				sprintf(tmp_string, "%.2f);\n", tmp_p[channel]);
+				strcat(uart_tx_buf, tmp_string);
+			}
+		}
+
+		if(HAL_OK != HAL_UART_Transmit(huart, (uint8_t*)uart_tx_buf, strlen(uart_tx_buf)+1, UART_TIMEOUT))
+		{
+			Error_Handler();
+		}
+	}
+
+	else if(adc_data_type == SEND_TELE)
+	{
+		const float* tmp_p = readTele();
+		/* Telemetry message format is: >tele(Vin, It, Ic, AT); */
+		strcat(uart_tx_buf, ">tele(");
+		for(uint8_t channel = 0; channel < TELE_CHANNELS ; channel++)
+		{
+			if(channel < TELE_CHANNELS-1)
+			{
+				sprintf(tmp_string, "%.2f,", tmp_p[channel]);
+				strcat(uart_tx_buf, tmp_string);
+			}
+			if(channel == TELE_CHANNELS-1)
+			{
+				sprintf(tmp_string, "%.2f);\n", tmp_p[channel]);
+				strcat(uart_tx_buf, tmp_string);
+			}
+		}
+
+		if(HAL_OK != HAL_UART_Transmit(huart, (uint8_t*)uart_tx_buf, strlen(uart_tx_buf)+1, UART_TIMEOUT))
+		{
+			Error_Handler();
+		}
+	}
+
+	else
+	{
+		Error_Handler();
+	}
+
+	/* Reset buffer */
+	uart_tx_buf[0] = '\0';
+
+	/* Disable UART Pin*/
+	HAL_GPIO_WritePin(USART_DE_GPIO_Port, USART_DE_Pin, UART_DISABLE);
+
 }
 
 

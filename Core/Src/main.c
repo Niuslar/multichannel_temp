@@ -21,8 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "adc_temp.h"
 #include "pid_control.h"
+#include "adc_data.h"
 #include "uart_com.h"
 
 /* USER CODE END Includes */
@@ -61,6 +61,7 @@ TIM_HandleTypeDef htim22;
 
 const uint16_t* adc_temps;
 volatile uint8_t conv_cmplt_flag = 0;
+volatile uint8_t send_uart_flag = 0;
 
 /* USER CODE END PV */
 
@@ -131,7 +132,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   /* Initialise ADC reading */
-  tempInit(&hadc);
+  adcInit(&hadc);
 
   /* USER CODE END 2 */
 
@@ -141,15 +142,17 @@ int main(void)
   {
 	if(conv_cmplt_flag == 1)
 	{
-
-		uartSendData(&huart2, SEND_CELSIUS);
 		conv_cmplt_flag = 0;
 
+		if(send_uart_flag == 1)
+		{
+			uartSendData(&huart2, SEND_ADC);
+			uartSendData(&huart2, SEND_CELSIUS);
+			uartSendData(&huart2, SEND_TELE);
+			send_uart_flag = 0;
+		}
 
-		/* Restart ADC by changing ADCSTART bit in the ADC control register */
-		volatile uint32_t* ADC_control_reg = (uint32_t*)0x40012408;
-		*ADC_control_reg |= (1 << ADC_START_BIT);
-
+		triggerADC();
 	}
     /* USER CODE END WHILE */
 
@@ -786,14 +789,24 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ALARM_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
 
-/** ADC Conversion Complete Interrup Callback */
+/** ADC Conversion Complete Interrupt Callback */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 	conv_cmplt_flag = 1;
+}
+
+/* Blue button interrupt */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	send_uart_flag = 1;
 }
 
 /* USER CODE END 4 */
