@@ -8,6 +8,8 @@
 #include "command_parser.h"
 #include <ctype.h>
 
+/* these are command delimiting characters and must not appear anywhere within
+ * command body. */
 #define COMMAND_SYMBOL '>'
 #define CHECKSUM_SUMBOL ';'
 
@@ -21,7 +23,7 @@ uint8_t storeCharacter(command_parser_t *p_parser, char character);
 void initParser(command_parser_t *p_parser)
 {
 	p_parser->parser_state = ESTATE_IDLE;
-	p_parser->p_head = p_parser->command;
+	p_parser->p_head = p_parser->buffer;
 }
 
 
@@ -109,7 +111,7 @@ uint8_t storeCharacter(command_parser_t *p_parser, char character)
 {
 	/* Memory safety checking due to direct operation with pointer. If pointer
 	 * has grown beyond the size of the array, do no allow pointer operation.*/
-	if (((p_parser->p_head) - (p_parser->command)) > MAX_COMMAND_SIZE)
+	if (((p_parser->p_head) - (p_parser->buffer)) > MAX_COMMAND_SIZE)
 	{
 		return 0;
 	}
