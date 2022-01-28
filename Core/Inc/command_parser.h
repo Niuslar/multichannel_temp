@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #define MAX_COMMAND_SIZE 50
+#define CHECKSUM_MASK    0xFF
 
 enum parser_state_t
 {
@@ -21,12 +22,13 @@ enum parser_state_t
 
 typedef struct COMMAND_PARSER_T
 {
-    char buffer[MAX_COMMAND_SIZE];   // container for storing incoming data
-                                     // stream.
+    char command_buffer[MAX_COMMAND_SIZE];  // container for storing incoming
+                                            // data stream.
     char command[MAX_COMMAND_SIZE];  // container for storing latest reassembled
                                      // command.
-    unsigned int checksum;           // container for storing decoded checksum.
+    uint32_t checksum;               // container for storing decoded checksum.
     char *p_head;
+    char *p_checksum;
     enum parser_state_t parser_state;
 } command_parser_t;
 
