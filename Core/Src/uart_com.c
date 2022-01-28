@@ -8,14 +8,15 @@
  *      Author: niuslar
  */
 
+#include "temperature.h"
 #include "main.h"
 #include "uart_com.h"
+#include "telemetry.h"
 #include "adc_data.h"
 #include "stdio.h"
 #include "string.h"
 
 /* Private variables */
-static uint32_t time_stamp = 0;
 static char uart_tx_buf[TX_MSG_LEN];
 static char tmp_string[TMP_STRING_LEN];
 
@@ -33,7 +34,7 @@ void uartSendData(UART_HandleTypeDef *huart, uint8_t adc_data_type)
 
 	if(adc_data_type == SEND_ADC)
 	{
-		const uint16_t* tmp_p = readADCData();
+		const uint16_t* tmp_p = getADCData();
 		strcat(uart_tx_buf, ">adc(");
 		for(uint8_t channel = 0; channel < ADC_CHANNELS; channel++)
 		{
@@ -56,7 +57,7 @@ void uartSendData(UART_HandleTypeDef *huart, uint8_t adc_data_type)
 	}
 	else if(adc_data_type == SEND_CELSIUS)
 	{
-		const float* tmp_p = readTempSensors();
+		const float* tmp_p = readTemp();
 		strcat(uart_tx_buf, ">temp(");
 		for(uint8_t channel = 0; channel < TEMP_CHANNELS; channel++)
 		{

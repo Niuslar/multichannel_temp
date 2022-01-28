@@ -8,8 +8,8 @@
  *      Author: niuslar
  */
 
-#ifndef INC_UART_COM_H_
-#define INC_UART_COM_H_
+#ifndef UART_COM_H_
+#define UART_COM_H_
 
 #include "main.h"
 #include "adc_data.h"
@@ -28,4 +28,4 @@
 /* Exported Function Prototypes */
 void uartSendData(UART_HandleTypeDef *huart, uint8_t raw_or_celsius);
 
-#endif /* INC_UART_COM_H_ */
+#endif /* UART_COM_H_ */

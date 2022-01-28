@@ -1,7 +1,7 @@
 /**
  *
  * @file  adc_data.c
- * @brief This file contains the ADC temperature reading functions
+ * @brief This file contains the ADC data gathering functions
  */
 
 /*  Created on: 10 Jan 2022
@@ -9,22 +9,19 @@
  */
 
 #include "adc_data.h"
-#include "main.h"
-#include <math.h>
 
 /* Private defines */
 #define ADC_START_BIT 	2
-#define MAX_IN_CURRENT 	20
-#define INA180_V		((3.0/ADC_VDDA)*ADC_RES)
 
 
 /* Private variables */
-float converted_temp_buf[TEMP_CHANNELS];
-float converted_tele_buf[TELE_CHANNELS];
 static uint16_t raw_data_buffer[ADC_CHANNELS];
+float temp_volt[TEMP_CHANNELS];
+float tele_volt[TELE_CHANNELS];
 
-/* Private functions prototypes */
-static float convertTemp(uint16_t raw_value);
+/* Private functions */
+static float adcToVolt(uint16_t raw_adc_value);
+
 
 /**
   * @brief Calibrate and Start ADC
@@ -46,86 +43,66 @@ void adcInit(ADC_HandleTypeDef* hadc)
 }
 
 /**
-  * @brief Read the 12-bit values
+  * @brief Read the 12-bit values from ADC channels
   * @param None
   * @retval Pointer to array of size ADC_CHANNELS with the 12-bit ADC values
   */
-const uint16_t* readADCData()
+const uint16_t* getADCData()
 {
 	return raw_data_buffer;
 }
 
 /**
-  * @brief Read the temperature from ADC values
-  * @param None
-  * @retval Pointer to array of size ADC_CHANNELS with the temperature in Celsius
+  * @brief Converts the selected ADC channels to volts
+  * @param temp_or_tele can be either TELE or TEMP
+  * @retval Pointer to array of size TEMP_CHANNELS containing voltages
   */
-const float* readTempSensors()
+const float* getVolts(uint8_t temp_or_tele)
 {
-	/* Loop through each value in the raw_data_buffer and convert it */
-	for(int i = 0; i < TEMP_CHANNELS; i++)
+	if(temp_or_tele == TEMP)
 	{
-		converted_temp_buf[i] = convertTemp(raw_data_buffer[i]);
+		for(uint8_t channel = 0; channel < TEMP_CHANNELS; channel++)
+		{
+			temp_volt[channel] = adcToVolt(raw_data_buffer[channel]);
+		}
+
+		return temp_volt;
 	}
 
-	return converted_temp_buf;
-}
-
-static float convertTemp(uint16_t raw_value)
-{
-	float temp_celsius;
-	/* Check the values are within range (2.67 and 0.57V) */
-	if(raw_value > MIN_VRANGE && raw_value < MAX_VRANGE)
+	else if(temp_or_tele == TELE)
 	{
-		float voltage = ((double)raw_value/ADC_RES)*ADC_VDDA;
-		/* Polynomial equation to convert voltage to Celsius
-		 * f(x) = 214 + -166x + 69.7x^2 + -13.4x^3, where x is the voltage */
-		temp_celsius = 214 - 166*voltage + 69.7*pow(voltage,2) -13.4*pow(voltage,3);
+		for(uint8_t channel = 0; channel < TELE_CHANNELS; channel++)
+		{
+			tele_volt[channel] = adcToVolt(raw_data_buffer[TEMP_CHANNELS + channel]);
+		}
+
+		return tele_volt;
 	}
+
 	else
 	{
-		/* Return unrealistic value to trigger error */
-		temp_celsius = 999.9;
+		return NULL;
 	}
-	return temp_celsius;
 }
 
-const float* readTele()
-{
-	/* Calculate telemetry value and store in buffer */
-	float tmp_value;
-	uint8_t channel;
 
-	/* Calculate and store voltage */
-	channel = TEMP_CHANNELS;
-	tmp_value = ((float)raw_data_buffer[channel]/ADC_RES)*ADC_VDDA;
-	converted_tele_buf[0] = tmp_value;
-
-	/* Total current */
-	channel = TEMP_CHANNELS + 1;
-	tmp_value = ((float)raw_data_buffer[channel]/INA180_V)*MAX_IN_CURRENT;
-	converted_tele_buf[1] = tmp_value;
-
-	/* Control Current */
-	channel = TEMP_CHANNELS + 2;
-	tmp_value = ((float)raw_data_buffer[channel]/INA180_V)*MAX_IN_CURRENT;
-	converted_tele_buf[2] = tmp_value;
-
-	/* Ambient temp */
-	channel = TEMP_CHANNELS + 3;
-	tmp_value = convertTemp(raw_data_buffer[channel]);
-	converted_tele_buf[3] = tmp_value;
-
-	return converted_tele_buf;
-}
-
+/**
+  * @brief Trigger ADC reading
+  * @param None
+  * @retval None
+  */
 void triggerADC()
 {
-	/* start ADC again */
 	volatile uint32_t* ADC_control_reg = (uint32_t*)0x40012408;
 
 	/* Change ADCSTART bit in the ADC control register */
 	*ADC_control_reg |= (1 << ADC_START_BIT);
+}
+
+static float adcToVolt(uint16_t raw_adc_value)
+{
+	float volts = (((float)raw_adc_value)/(ADC_RES))*ADC_VDDA;
+	return volts;
 }
 
 

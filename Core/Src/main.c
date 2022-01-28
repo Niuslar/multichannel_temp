@@ -22,9 +22,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "pid_control.h"
-#include "adc_data.h"
 #include "uart_com.h"
-
+#include "adc_data.h"
+#include "telemetry.h"
+#include "temperature.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
