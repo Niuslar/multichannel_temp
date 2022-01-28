@@ -6,6 +6,7 @@
  */
 
 #include "command_parser.h"
+#include <ctype.h>
 
 #define COMMAND_SYMBOL '>'
 #define CHECKSUM_SUMBOL ';'
@@ -72,12 +73,41 @@ uint8_t isCommandStart(char character)
 }
 
 
-uint8_t isCommandBody(char character);
-uint8_t isChecksum(char character);
-uint8_t isNewLine(char character);
+uint8_t isCommandBody(char character)
+{
+	/* Arbitrarily complex conditional statement can be created here to limit
+	 * what is considered command and what is not a command.
+	 * For now for simplicity sake anything that is a printable character, i.e.
+	 * anything that is not a control character is considered valid. */
+	return isprint(character);
+}
+
+
+uint8_t isChecksum(char character)
+{
+	unsigned int result = 0;
+	if(character == CHECKSUM_SUMBOL)
+	{
+		result = 1;
+	}
+	return result;
+}
+
+
+uint8_t isNewLine(char character)
+{
+	unsigned int result = 0;
+	if((character == '\n') || (character == '\r'))
+	{
+		result = 1;
+	}
+	return result;
+}
+
+
 uint8_t storeCharacter(command_parser_t *p_parser, char character)
 {
-	/* memory safety checking due to direct operation with pointer. If pointer
+	/* Memory safety checking due to direct operation with pointer. If pointer
 	 * has grown beyond the size of the array, do no allow pointer operation.*/
 	if (((p_parser->p_head) - (p_parser->command)) > MAX_COMMAND_SIZE)
 	{

@@ -24,7 +24,7 @@ typedef struct COMMAND_PARSER_T
 {
 	char command[MAX_COMMAND_SIZE];
 	char checksum[MAX_CHECKSUM_SIZE];
-	char* p_progress;
+	char* p_head;
 	enum parser_state_t parser_state;
 }command_parser_t;
 
