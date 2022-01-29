@@ -117,10 +117,13 @@ uint8_t newCharacter(command_parser_t *p_parser, char character)
                             MAX_COMMAND_SIZE);
                     new_command_ready = 1;
                 }
+                else
+                {
+                    initParser(p_parser);
+                }
             }
             break;
     }
-
     return new_command_ready;
 }
 
