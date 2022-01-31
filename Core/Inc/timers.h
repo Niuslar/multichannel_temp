@@ -12,15 +12,20 @@
 
 #include "main.h"
 
-#define CONTROL_CHANNELS	10
+#define CONTROL_CHANNELS 10
 
-typedef struct{
-	TIM_HandleTypeDef* htim;
-	uint8_t	timer_ch;
-	uint8_t control_ch;
-}pwm_handler_t;
+typedef struct
+{
+    TIM_HandleTypeDef *p_htim;
+    uint8_t timer_ch;
+    uint8_t control_ch;
+    uint32_t counter_period;
+} pwm_handler_t;
 
 /* Exported Function Prototypes */
-void setDutyCycle(pwm_handler_t* p_pwm_handler, uint8_t duty_cycle);
+void configCtrlChannel(uint8_t control_channel,
+                       uint8_t timer_channel,
+                       TIM_HandleTypeDef *p_htim);
+void setDutyCycle(uint8_t control_channel, uint8_t duty_cycle);
 
 #endif /* TIMERS_H_ */

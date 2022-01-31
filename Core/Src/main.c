@@ -27,6 +27,7 @@
 #include "temperature.h"
 #include "uart_com.h"
 #include "timers.h"
+#include "uart_com.h"
 
 /* USER CODE END Includes */
 
@@ -63,7 +64,6 @@ DMA_HandleTypeDef hdma_tim6_up;
 
 /* USER CODE BEGIN PV */
 pwm_handler_t pwm_handlers[CONTROL_CHANNELS];
-
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
 
@@ -83,8 +83,6 @@ static void MX_LPUART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
-
-static void pwmInit();
 
 /* USER CODE END PFP */
 
@@ -137,7 +135,7 @@ int main(void)
     MX_TIM21_Init();
     MX_LPUART1_UART_Init();
     MX_USART2_UART_Init();
-    /* USER CODE BEGIN 2 */
+    MX_TIM6_Init();
 
     /* Initialise ADC reading */
     startADC(&hadc);
@@ -528,7 +526,7 @@ static void MX_TIM2_Init(void)
     htim2.Instance = TIM2;
     htim2.Init.Prescaler = 0;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim2.Init.Period = 3199;
+    htim2.Init.Period = 3200 - 1;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -577,6 +575,42 @@ static void MX_TIM2_Init(void)
 }
 
 /**
+ * @brief TIM6 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM6_Init(void)
+{
+    /* USER CODE BEGIN TIM6_Init 0 */
+
+    /* USER CODE END TIM6_Init 0 */
+
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    /* USER CODE BEGIN TIM6_Init 1 */
+
+    /* USER CODE END TIM6_Init 1 */
+    htim6.Instance = TIM6;
+    htim6.Init.Prescaler = 0;
+    htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim6.Init.Period = 3200 - 1;
+    htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN TIM6_Init 2 */
+
+    /* USER CODE END TIM6_Init 2 */
+}
+
+/**
  * @brief TIM21 Initialization Function
  * @param None
  * @retval None
@@ -597,7 +631,7 @@ static void MX_TIM21_Init(void)
     htim21.Instance = TIM21;
     htim21.Init.Prescaler = 0;
     htim21.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim21.Init.Period = 3199;
+    htim21.Init.Period = 3200 - 1;
     htim21.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim21.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim21) != HAL_OK)
@@ -659,7 +693,7 @@ static void MX_TIM22_Init(void)
     htim22.Instance = TIM22;
     htim22.Init.Prescaler = 0;
     htim22.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim22.Init.Period = 3199;
+    htim22.Init.Period = 3200 - 1;
     htim22.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim22.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim22) != HAL_OK)
@@ -708,17 +742,13 @@ static void MX_DMA_Init(void)
     /* DMA controller clock enable */
     __HAL_RCC_DMA1_CLK_ENABLE();
 
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA1_CLK_ENABLE();
-
-  /* DMA interrupt init */
-  /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
-  /* DMA1_Channel2_3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
-
+    /* DMA interrupt init */
+    /* DMA1_Channel1_IRQn interrupt configuration */
+    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+    /* DMA1_Channel2_3_IRQn interrupt configuration */
+    HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
 }
 
 /**
