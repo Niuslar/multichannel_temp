@@ -12,22 +12,20 @@
 
 #include "main.h"
 
-/** ADC_RES should change depending on the resolution selected (4096 for 12-bits) */
-#define ADC_RES	     	4096
-#define ADC_VDDA     	(3.3)
-/** Number of active ADC Channels (Temperature + Telemetry) */
-#define ADC_CHANNELS 	14
-#define TEMP_CHANNELS 	10
-#define TELE_CHANNELS 	(ADC_CHANNELS - TEMP_CHANNELS)
-
-#define TELE			0
-#define TEMP 			1
-
+/** ADC_RES should change depending on the resolution selected (4096 for
+ * 12-bits) */
+#define ADC_RES  4096
+#define ADC_VDDA (3.3)
+/** Number of active ADC Channels (Temperature + Telemetry)
+ * 	The Temperature ADC Channels should come first and be consecutive
+ */
+#define ADC_CHANNELS  14
+#define TEMP_CHANNELS 10
 
 /* Exported Functions Prototypes */
-void adcInit(ADC_HandleTypeDef* hadc);
-const float* getVolts(uint8_t temp_or_tele);
-const float* readTele();
+void startADC(ADC_HandleTypeDef *hadc);
+float getVolts(uint8_t adc_channel);
+const uint16_t *getADCData();
 void triggerADC();
 
 #endif /* ADC_DATA_H_ */

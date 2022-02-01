@@ -10,9 +10,9 @@
 #ifndef TELEMETRY_H_
 #define TELEMETRY_H_
 
+#include "stdint.h"
 
 /* Exported Function Prototypes */
-const float* readTele();
-
+const float readTelemetry(uint8_t adc_channel);
 
 #endif /* TELEMETRY_H_ */

@@ -7,55 +7,46 @@
  *      Author: niuslar
  */
 
-#include "adc_data.h"
 #include "temperature.h"
+#include "adc_data.h"
 #include "math.h"
 
 /* Private defines */
-#define MIN_VRANGE   	(0.569)
-#define MAX_VRANGE	 	(2.672)
-
-/* Private variables */
-float converted_temp_buf[TEMP_CHANNELS];
-
+#define MIN_VRANGE (0.569)
+#define MAX_VRANGE (2.672)
 
 /**
-  * @brief Convert ADC voltage to temperature in Celsius
-  * @param None
-  * @retval Pointer to array of size TEMP_CHANNELS with the temperature in Celsius
-  */
-const float* readTemp()
+ * @brief Convert ADC voltage to temperature in Celsius for selected channel
+ * @param adc channel from 1 to ADC_CHANNELS
+ * @retval temperature in Celsius
+ * Celsius
+ */
+const float readTemperature(uint8_t adc_channel)
 {
-	const float* volts = getVolts(TEMP);
+    float volts;
+    float temperature;
 
-	if(volts == NULL)
-	{
-		Error_Handler();
-	}
+    volts = getVolts(adc_channel);
+    temperature = convertTemperature(volts);
 
-	/* Loop through each value in the raw_data_buffer and convert it */
-	for(int i = 0; i < TEMP_CHANNELS; i++)
-	{
-		converted_temp_buf[i] = convertTemp(volts[i]);
-	}
-
-	return converted_temp_buf;
+    return temperature;
 }
 
-float convertTemp(float temp_volts)
+float convertTemperature(float volts)
 {
-	float temp_celsius;
-	/* Check the values are within range (2.67 and 0.57V) */
-	if(temp_volts > MIN_VRANGE && temp_volts < MAX_VRANGE)
-	{
-		/* Polynomial equation to convert voltage to Celsius
-		 * f(x) = 214 + -166x + 69.7x^2 + -13.4x^3, where x is the voltage */
-		temp_celsius = 214 - 166*temp_volts + 69.7*pow(temp_volts,2) -13.4*pow(temp_volts,3);
-	}
-	else
-	{
-		/* Return unrealistic value to trigger error */
-		temp_celsius = 999.9;
-	}
-	return temp_celsius;
+    float temp_celsius;
+    /* Check the values are within range (2.67 and 0.57V) */
+    if (volts > MIN_VRANGE && volts < MAX_VRANGE)
+    {
+        /* Polynomial equation to convert voltage to Celsius
+         * f(x) = 214 + -166x + 69.7x^2 + -13.4x^3, where x is the voltage */
+        temp_celsius =
+            214 - 166 * volts + 69.7 * pow(volts, 2) - 13.4 * pow(volts, 3);
+    }
+    else
+    {
+        /* Return unrealistic value to trigger error */
+        temp_celsius = 999.9;
+    }
+    return temp_celsius;
 }

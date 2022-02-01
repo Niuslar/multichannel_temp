@@ -10,11 +10,10 @@
 #ifndef TEMPERATURE_H_
 #define TEMPERATURE_H_
 
-
+#include "stdint.h"
 
 /* Exported Function Prototypes */
-const float* readTemp();
-float convertTemp(float temp_volts);
+const float readTemperature(uint8_t adc_channel);
+float convertTemperature(float volts);
 
 #endif /* TEMPERATURE_H_ */
-

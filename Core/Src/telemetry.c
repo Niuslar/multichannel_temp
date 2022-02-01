@@ -7,55 +7,49 @@
  *      Author: niuslar
  */
 
-
-#include "temperature.h"
-#include "adc_data.h"
 #include "telemetry.h"
+#include "adc_data.h"
+#include "temperature.h"
 
 /* Private defines */
-#define MAX_IN_CURRENT 	20
-#define INA180_V		(3.0)
+#define MAX_IN_CURRENT_AMP 20
+#define INA180_VOLT        (3.0)
 
-/* Private variables */
-float converted_tele_buf[TELE_CHANNELS];
-
-
-const float* readTele()
+/**
+ * @brief Internal telemetry readings for selected channel
+ * @param adc channel
+ * @retval Internal telemetry reading
+ */
+const float readTelemetry(uint8_t adc_channel)
 {
-	const float* tele_volts = getVolts(TELE);
+    float volts;
+    float telemetry;
 
-	if(tele_volts == NULL)
-	{
-		Error_Handler();
-	}
+    /* Check that the ADC channel is a telemetry channel */
+    if (adc_channel <= TEMP_CHANNELS || adc_channel > ADC_CHANNELS)
+    {
+        Error_Handler();
+    }
 
+    /* Voltage channel */
+    if (adc_channel == 11)
+    {
+        telemetry = getVolts(adc_channel);
+    }
 
-	/* Calculate telemetry value and store in buffer */
-	float tmp_value;
+    /* Total and control current channels */
+    if (adc_channel == 12 || adc_channel == 13)
+    {
+        volts = getVolts(adc_channel);
+        telemetry = (volts / INA180_VOLT) * MAX_IN_CURRENT_AMP;
+    }
 
-	for(uint8_t channel = 0; channel < TELE_CHANNELS; channel++)
-	{
-		/* Store voltage */
-		if(channel == 0)
-		{
-			tmp_value = tele_volts[channel];
-			converted_tele_buf[channel] = tmp_value;
-		}
+    /* Ambient temperature */
+    if (adc_channel == 14)
+    {
+        volts = getVolts(adc_channel);
+        telemetry = convertTemperature(volts);
+    }
 
-		/* Store total and control current */
-		if(channel == 1 || channel == 2)
-		{
-			tmp_value = (tele_volts[channel]/INA180_V)*MAX_IN_CURRENT;
-			converted_tele_buf[channel] = tmp_value;
-		}
-
-		/* Store Ambient temp */
-		if(channel == 3)
-		{
-			tmp_value = convertTemp(tele_volts[channel]);
-			converted_tele_buf[channel] = tmp_value;
-		}
-	}
-
-	return converted_tele_buf;
+    return telemetry;
 }
