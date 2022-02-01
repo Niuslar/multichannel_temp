@@ -53,7 +53,7 @@ const uint16_t *getADCData()
  */
 float getVolts(uint8_t adc_channel)
 {
-    if (checkChannel(adc_channel) != CHANNEL_OK)
+    if (adc_channel < 0 || adc_channel >= ADC_CHANNELS)
     {
         Error_Handler();
     }
@@ -71,21 +71,4 @@ void triggerADC()
     /* Change ADCSTART bit in the ADC control register */
     volatile uint32_t *p_adc_control_reg = ADC_CONTROL_REG_ADDR;
     *p_adc_control_reg |= (1 << ADC_START_BIT);
-}
-
-/**
- * @brief Checks the ADC channel selected is a valid number
- * @param adc channel
- * @retval CHANNEL_OK if OK, CHANNEL_ERROR if there's an error
- */
-uint8_t checkChannel(uint8_t adc_channel)
-{
-    if (adc_channel >= 0 && adc_channel < ADC_CHANNELS)
-    {
-        return CHANNEL_OK;
-    }
-    else
-    {
-        return CHANNEL_ERROR;
-    }
 }

@@ -23,7 +23,7 @@
  */
 const float readTemperature(uint8_t adc_channel)
 {
-    if (checkChannel(adc_channel) != CHANNEL_OK)
+    if (adc_channel < 0 || adc_channel >= ADC_CHANNELS)
     {
         Error_Handler();
     }
