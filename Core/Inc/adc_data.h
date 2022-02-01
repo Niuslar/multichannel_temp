@@ -21,11 +21,14 @@
  */
 #define ADC_CHANNELS  14
 #define TEMP_CHANNELS 10
+#define CHANNEL_OK    0
+#define CHANNEL_ERROR 1
 
 /* Exported Functions Prototypes */
 void startADC(ADC_HandleTypeDef *hadc);
 float getVolts(uint8_t adc_channel);
 const uint16_t *getADCData();
+uint8_t checkChannel(uint8_t adc_channel);
 void triggerADC();
 
 #endif /* ADC_DATA_H_ */

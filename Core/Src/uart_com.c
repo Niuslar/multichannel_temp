@@ -61,15 +61,15 @@ void uartSendData(UART_HandleTypeDef *huart, uint8_t adc_data_type)
     else if (adc_data_type == SEND_CELSIUS)
     {
         strcat(uart_tx_buf, ">temp(");
-        for (uint8_t channel = 1; channel <= TEMP_CHANNELS; channel++)
+        for (uint8_t channel = 0; channel < TEMP_CHANNELS; channel++)
         {
             const float temperature = readTemperature(channel);
-            if (channel < TEMP_CHANNELS)
+            if (channel < TEMP_CHANNELS - 1)
             {
                 sprintf(string, "%.2f,", temperature);
                 strcat(uart_tx_buf, string);
             }
-            if (channel == TEMP_CHANNELS)
+            if (channel == TEMP_CHANNELS - 1)
             {
                 sprintf(string, "%.2f);\n", temperature);
                 strcat(uart_tx_buf, string);
@@ -89,16 +89,15 @@ void uartSendData(UART_HandleTypeDef *huart, uint8_t adc_data_type)
     {
         /* Telemetry message format is: >tele(Vin, It, Ic, AT); */
         strcat(uart_tx_buf, ">tele(");
-        for (uint8_t channel = TEMP_CHANNELS + 1; channel <= ADC_CHANNELS;
-             channel++)
+        for (uint8_t channel = TEMP_CHANNELS; channel < ADC_CHANNELS; channel++)
         {
             const float telemetry = readTelemetry(channel);
-            if (channel < ADC_CHANNELS)
+            if (channel < ADC_CHANNELS - 1)
             {
                 sprintf(string, "%.2f,", telemetry);
                 strcat(uart_tx_buf, string);
             }
-            if (channel == ADC_CHANNELS)
+            if (channel == ADC_CHANNELS - 1)
             {
                 sprintf(string, "%.2f);\n", telemetry);
                 strcat(uart_tx_buf, string);

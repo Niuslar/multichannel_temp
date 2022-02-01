@@ -48,13 +48,16 @@ const uint16_t *getADCData()
 
 /**
  * @brief Converts the selected ADC channel to volts
- * @param ADC Channel (1 - ADC_CHANNELS)
+ * @param ADC Channel. The ADC Channels start from 0 to (ADC_CHANNELS - 1)
  * @retval voltage
  */
 float getVolts(uint8_t adc_channel)
 {
-    float volts =
-        ((float)raw_data_buffer[adc_channel - 1]) / (ADC_RES)*ADC_VDDA;
+    if (checkChannel(adc_channel) != CHANNEL_OK)
+    {
+        Error_Handler();
+    }
+    float volts = ((float)raw_data_buffer[adc_channel]) / (ADC_RES)*ADC_VDDA;
     return volts;
 }
 
@@ -68,4 +71,21 @@ void triggerADC()
     /* Change ADCSTART bit in the ADC control register */
     volatile uint32_t *p_adc_control_reg = ADC_CONTROL_REG_ADDR;
     *p_adc_control_reg |= (1 << ADC_START_BIT);
+}
+
+/**
+ * @brief Checks the ADC channel selected is a valid number
+ * @param adc channel
+ * @retval CHANNEL_OK if OK, CHANNEL_ERROR if there's an error
+ */
+uint8_t checkChannel(uint8_t adc_channel)
+{
+    if (adc_channel >= 0 && adc_channel < ADC_CHANNELS)
+    {
+        return CHANNEL_OK;
+    }
+    else
+    {
+        return CHANNEL_ERROR;
+    }
 }

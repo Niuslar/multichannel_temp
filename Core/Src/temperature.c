@@ -17,12 +17,16 @@
 
 /**
  * @brief Convert ADC voltage to temperature in Celsius for selected channel
- * @param adc channel from 1 to ADC_CHANNELS
+ * @param adc channel from 0 to ADC_CHANNELS - 1
  * @retval temperature in Celsius
  * Celsius
  */
 const float readTemperature(uint8_t adc_channel)
 {
+    if (checkChannel(adc_channel) != CHANNEL_OK)
+    {
+        Error_Handler();
+    }
     float volts;
     float temperature;
 
@@ -46,7 +50,7 @@ float convertTemperature(float volts)
     else
     {
         /* Return unrealistic value to trigger error */
-        temp_celsius = 999.9;
+        temp_celsius = OUT_OF_RANGE_ERROR;
     }
     return temp_celsius;
 }
