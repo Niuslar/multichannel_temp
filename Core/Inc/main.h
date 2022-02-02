@@ -61,6 +61,7 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
+#define B1_EXTI_IRQn EXTI4_15_IRQn
 #define BREATHING_Pin GPIO_PIN_14
 #define BREATHING_GPIO_Port GPIOC
 #define USART_DE_Pin GPIO_PIN_15
@@ -138,7 +139,7 @@ void Error_Handler(void);
 #define HEAT_COOL_2_Pin GPIO_PIN_9
 #define HEAT_COOL_2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-#define ADC_CHANNELS 14
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
