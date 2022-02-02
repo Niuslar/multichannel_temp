@@ -10,7 +10,7 @@
 #include "timers.h"
 
 /** All timers start with a counter period of 3200
- * 	which translates to a frequency of 10,000 KHz.
+ * 	which translates to a frequency of 10,000Hz.
  * 	Use the function setFrequency to change the frequency of a timer.
  */
 #define CLOCK_SOURCE_HZ        32000000
