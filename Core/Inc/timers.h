@@ -22,11 +22,25 @@ typedef struct
     uint32_t counter_period;
 } pwm_handler_t;
 
+typedef enum
+{
+    CONTROL_CH_1,
+    CONTROL_CH_2,
+    CONTROL_CH_3,
+    CONTROL_CH_4,
+    CONTROL_CH_5,
+    CONTROL_CH_6,
+    CONTROL_CH_7,
+    CONTROL_CH_8,
+    CONTROL_CH_9,
+    CONTROL_CH_10,
+} control_ch_t;
+
 /* Exported Function Prototypes */
-void startPWM(uint8_t control_channel,
+void startPWM(control_ch_t control_channel,
               uint8_t timer_channel,
               TIM_HandleTypeDef *p_htim);
-void setDutyCycle(uint8_t control_channel, uint8_t duty_cycle);
+void setDutyCycle(control_ch_t control_channel, uint8_t duty_cycle);
 void setFrequency(TIM_HandleTypeDef *p_htim, uint32_t freq_kz);
 
 #endif /* TIMERS_H_ */

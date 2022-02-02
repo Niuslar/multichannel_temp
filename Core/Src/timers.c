@@ -34,22 +34,19 @@ static void startSoftPWM(uint8_t control_channel);
 
 /**
  * @brief Save configuration for control channel and start PWM
- * @param control channel from 0 to CONTROL_CHANNELS - 1
- * @param timer channel (1-4 for timer 2, 1-2 for timers 21 and 22)
+ * @param control channel in the form of CONTROL_CH_X (X from 1 to 10)
+ * @param timer channel as TIM_CHANNEL_X (X from 1 to 4)
  * @param htim	pointer to timer handler, if using a soft time (channels 9-10)
  * set pointer as NULL.
  */
-void startPWM(uint8_t control_channel,
+void startPWM(control_ch_t control_channel,
               uint8_t timer_channel,
               TIM_HandleTypeDef *p_htim)
 {
-    /* Check arguments */
-    if (control_channel < 0 || control_channel >= CONTROL_CHANNELS ||
-        timer_channel < 1 || timer_channel > 4)
+    if (control_channel < 0 || control_channel >= CONTROL_CHANNELS)
     {
         Error_Handler();
     }
-
     pwm_channels[control_channel].control_ch = control_channel;
     pwm_channels[control_channel].counter_period = DEFAULT_COUNTER_PERIOD;
 
@@ -68,21 +65,7 @@ void startPWM(uint8_t control_channel,
 
     pwm_channels[control_channel].p_htim = p_htim;
 
-    switch (timer_channel)
-    {
-        case 1:
-            pwm_channels[control_channel].timer_ch = TIM_CHANNEL_1;
-            break;
-        case 2:
-            pwm_channels[control_channel].timer_ch = TIM_CHANNEL_2;
-            break;
-        case 3:
-            pwm_channels[control_channel].timer_ch = TIM_CHANNEL_3;
-            break;
-        case 4:
-            pwm_channels[control_channel].timer_ch = TIM_CHANNEL_4;
-            break;
-    }
+    pwm_channels[control_channel].timer_ch = timer_channel;
 
     /* Start PWM with default config */
     HAL_TIM_PWM_Start(p_htim, pwm_channels[control_channel].timer_ch);
@@ -95,7 +78,7 @@ void startPWM(uint8_t control_channel,
  *  @param control channel from 0 to CONTROL_CHANNELS-1
  *  @param duty_cycle is the duty cycle between 1-100
  */
-void setDutyCycle(uint8_t control_channel, uint8_t duty_cycle)
+void setDutyCycle(control_ch_t control_channel, uint8_t duty_cycle)
 {
     /* Check it's a valid control channel */
     if (control_channel < 0 || control_channel >= CONTROL_CHANNELS)

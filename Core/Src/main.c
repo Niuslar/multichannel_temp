@@ -139,15 +139,19 @@ int main(void)
     /* Start PWM Channels */
 
     /* Start all control channels */
-    startPWM(0, 1, &htim2);
-    startPWM(1, 2, &htim2);
+    startPWM(CONTROL_CH_1, TIM_CHANNEL_1, &htim2);
+    startPWM(CONTROL_CH_2, TIM_CHANNEL_2, &htim2);
+    startPWM(CONTROL_CH_3, TIM_CHANNEL_3, &htim2);
+    startPWM(CONTROL_CH_4, TIM_CHANNEL_4, &htim2);
 
     /* Set timers freq */
     setFrequency(&htim2, 10000);
 
     /* Set duty cycle */
-    setDutyCycle(0, 70);
-    setDutyCycle(1, 40);
+    setDutyCycle(CONTROL_CH_1, 70);
+    setDutyCycle(CONTROL_CH_2, 40);
+    setDutyCycle(CONTROL_CH_3, 50);
+    setDutyCycle(CONTROL_CH_4, 50);
 
     /* Initialise ADC reading */
     startADC(&hadc);
