@@ -25,7 +25,6 @@
 #include "pid_control.h"
 #include "telemetry.h"
 #include "temperature.h"
-#include "uart_com.h"
 #include "timers.h"
 #include "uart_com.h"
 
@@ -63,7 +62,6 @@ TIM_HandleTypeDef htim22;
 DMA_HandleTypeDef hdma_tim6_up;
 
 /* USER CODE BEGIN PV */
-pwm_handler_t pwm_handlers[CONTROL_CHANNELS];
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
 
@@ -136,10 +134,23 @@ int main(void)
     MX_LPUART1_UART_Init();
     MX_USART2_UART_Init();
     MX_TIM6_Init();
+    /* USER CODE BEGIN 2 */
+
+    /* Start PWM Channels */
+
+    /* Start all control channels */
+    startPWM(0, 1, &htim2);
+    startPWM(1, 2, &htim2);
+
+    /* Set timers freq */
+    setFrequency(&htim2, 10000);
+
+    /* Set duty cycle */
+    setDutyCycle(0, 70);
+    setDutyCycle(1, 40);
 
     /* Initialise ADC reading */
     startADC(&hadc);
-
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -830,55 +841,6 @@ static void MX_GPIO_Init(void)
     /* EXTI interrupt init*/
     HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
-}
-
-/**
-  * @brief Set the pwm handler for all the control channels
-  * @param None
-  * @retval None
-  */
-static void pwmInit()
-{
-	pwm_handler_t tmp_handler;
-
-	/* Control channels 1-4 use TIM2's channels 1-4 */
-	tmp_handler.htim = &htim2;
-	for(uint8_t channel = 0; channel < 4; channel++)
-	{
-		tmp_handler.control_ch = channel;
-		tmp_handler.timer_ch = channel + 1;
-
-		/* Store configuration */
-		pwm_handlers[channel] = tmp_handler;
-	}
-
-	/* Control channels 5-6 use TIM21's channels 1-2 */
-	tmp_handler.htim = &htim21;
-	tmp_handler.timer_ch = 1;
-	tmp_handler.control_ch = 4;
-	pwm_handlers[4] = tmp_handler;
-	tmp_handler.timer_ch = 2;
-	tmp_handler.control_ch = 5;
-	pwm_handlers[5] = tmp_handler;
-
-	/* Control channels 7-8 use TIM22's channels 1-2 */
-	tmp_handler.htim = &htim22;
-	tmp_handler.timer_ch = 1;
-	tmp_handler.control_ch = 6;
-	pwm_handlers[6] = tmp_handler;
-	tmp_handler.timer_ch = 2;
-	tmp_handler.control_ch = 7;
-	pwm_handlers[7] = tmp_handler;
-
-	/* Control channels 9-10 use softPWM based on TIM6 */
-	tmp_handler.htim = &htim6;
-	tmp_handler.timer_ch = 1;
-	tmp_handler.control_ch = 8;
-	pwm_handlers[8] = tmp_handler;
-	tmp_handler.timer_ch = 2;
-	tmp_handler.control_ch = 9;
-	pwm_handlers[9] = tmp_handler;
-
 }
 
 /* USER CODE BEGIN 4 */

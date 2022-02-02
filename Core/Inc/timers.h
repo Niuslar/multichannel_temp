@@ -23,9 +23,10 @@ typedef struct
 } pwm_handler_t;
 
 /* Exported Function Prototypes */
-void configCtrlChannel(uint8_t control_channel,
-                       uint8_t timer_channel,
-                       TIM_HandleTypeDef *p_htim);
+void startPWM(uint8_t control_channel,
+              uint8_t timer_channel,
+              TIM_HandleTypeDef *p_htim);
 void setDutyCycle(uint8_t control_channel, uint8_t duty_cycle);
+void setFrequency(TIM_HandleTypeDef *p_htim, uint32_t freq_kz);
 
 #endif /* TIMERS_H_ */
