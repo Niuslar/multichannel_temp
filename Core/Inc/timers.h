@@ -13,16 +13,17 @@
 #include "main.h"
 
 #define CONTROL_CHANNELS 10
+#define DUTY_STEPS       100
 
 typedef struct
 {
     TIM_HandleTypeDef *p_htim;
     uint8_t timer_ch;
     uint8_t control_ch;
-    uint32_t counter_period;
+    uint16_t control_pin; /* This is only necessary for software timers */
 } pwm_handler_t;
 
-typedef enum
+enum CONTROL_CH
 {
     CONTROL_CH_1,
     CONTROL_CH_2,
@@ -34,13 +35,12 @@ typedef enum
     CONTROL_CH_8,
     CONTROL_CH_9,
     CONTROL_CH_10,
-} control_ch_t;
+};
 
 /* Exported Function Prototypes */
-void startPWM(control_ch_t control_channel,
-              uint8_t timer_channel,
-              TIM_HandleTypeDef *p_htim);
-void setDutyCycle(control_ch_t control_channel, uint8_t duty_cycle);
-void setFrequency(TIM_HandleTypeDef *p_htim, uint32_t freq_kz);
+void startPWM(pwm_handler_t *p_pwm_handler);
+void setDutyCycle(pwm_handler_t *p_pwm_handler, uint8_t duty_cycle);
+void setFrequency(pwm_handler_t *p_pwm_handler, uint32_t freq_hz);
+uint32_t *getDutyCycle();
 
 #endif /* TIMERS_H_ */
