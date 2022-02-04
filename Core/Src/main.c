@@ -56,7 +56,6 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 TIM_HandleTypeDef htim2;
-TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim21;
 TIM_HandleTypeDef htim22;
 
@@ -64,8 +63,6 @@ TIM_HandleTypeDef htim22;
 pwm_handler_t pwm_ch_handlers[CONTROL_CHANNELS];
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
-volatile uint8_t duty_cycle_count = 0;
-volatile uint32_t *p_soft_pwm_buf;
 
 /* USER CODE END PV */
 
@@ -81,7 +78,6 @@ static void MX_DMA_Init(void);
 static void MX_TIM21_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 static void initPWMHandlers();
@@ -137,7 +133,6 @@ int main(void)
     MX_TIM21_Init();
     MX_LPUART1_UART_Init();
     MX_USART2_UART_Init();
-    MX_TIM6_Init();
     /* USER CODE BEGIN 2 */
 
     startADC(&hadc);
@@ -157,27 +152,15 @@ int main(void)
     startPWM(&pwm_ch_handlers[CONTROL_CH_7]);
     startPWM(&pwm_ch_handlers[CONTROL_CH_8]);
 
-    /* Software timers */
-    startPWM(&pwm_ch_handlers[CONTROL_CH_9]);
-    startPWM(&pwm_ch_handlers[CONTROL_CH_10]);
-
-    /* Set timers freq */
-    setFrequency(&pwm_ch_handlers[CONTROL_CH_1], 1250);
-
-    setFrequency(&pwm_ch_handlers[CONTROL_CH_9], 100);
-
     /* Set duty cycle */
     setDutyCycle(&pwm_ch_handlers[CONTROL_CH_1], 40);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_2], 50);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_3], 60);
+    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_2], 99);
+    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_3], 170);
     setDutyCycle(&pwm_ch_handlers[CONTROL_CH_4], 70);
     setDutyCycle(&pwm_ch_handlers[CONTROL_CH_5], 40);
     setDutyCycle(&pwm_ch_handlers[CONTROL_CH_6], 50);
     setDutyCycle(&pwm_ch_handlers[CONTROL_CH_7], 60);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_8], 70);
-
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_9], 40);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_10], 50);
+    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_8], 170);
 
     /* Initialise ADC reading */
     /* USER CODE END 2 */
@@ -564,9 +547,9 @@ static void MX_TIM2_Init(void)
 
     /* USER CODE END TIM2_Init 1 */
     htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 0;
+    htim2.Init.Prescaler = 400 - 1;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim2.Init.Period = 3200 - 1;
+    htim2.Init.Period = 1600 - 1;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -615,42 +598,6 @@ static void MX_TIM2_Init(void)
 }
 
 /**
- * @brief TIM6 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_TIM6_Init(void)
-{
-    /* USER CODE BEGIN TIM6_Init 0 */
-
-    /* USER CODE END TIM6_Init 0 */
-
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-    /* USER CODE BEGIN TIM6_Init 1 */
-
-    /* USER CODE END TIM6_Init 1 */
-    htim6.Instance = TIM6;
-    htim6.Init.Prescaler = 0;
-    htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim6.Init.Period = 3200 - 1;
-    htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN TIM6_Init 2 */
-
-    /* USER CODE END TIM6_Init 2 */
-}
-
-/**
  * @brief TIM21 Initialization Function
  * @param None
  * @retval None
@@ -669,9 +616,9 @@ static void MX_TIM21_Init(void)
 
     /* USER CODE END TIM21_Init 1 */
     htim21.Instance = TIM21;
-    htim21.Init.Prescaler = 0;
+    htim21.Init.Prescaler = 400 - 1;
     htim21.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim21.Init.Period = 3200 - 1;
+    htim21.Init.Period = 1600 - 1;
     htim21.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim21.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim21) != HAL_OK)
@@ -731,9 +678,9 @@ static void MX_TIM22_Init(void)
 
     /* USER CODE END TIM22_Init 1 */
     htim22.Instance = TIM22;
-    htim22.Init.Prescaler = 0;
+    htim22.Init.Prescaler = 400 - 1;
     htim22.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim22.Init.Period = 3200 - 1;
+    htim22.Init.Period = 1600 - 1;
     htim22.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim22.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim22) != HAL_OK)
@@ -870,6 +817,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+ * @brief Create handlers for hardware control channels
+ * @param None
+ * @retval None
+ */
 static void initPWMHandlers()
 {
     /* Handlers channels 1-10 */
@@ -877,63 +829,43 @@ static void initPWMHandlers()
 
     /*Channel 1*/
     pwm_handler.p_htim = &htim2;
-    pwm_handler.control_ch = CONTROL_CH_1;
     pwm_handler.timer_ch = TIM_CHANNEL_1;
     pwm_ch_handlers[CONTROL_CH_1] = pwm_handler;
 
     /* Channel 2 */
     pwm_handler.p_htim = &htim2;
-    pwm_handler.control_ch = CONTROL_CH_2;
     pwm_handler.timer_ch = TIM_CHANNEL_2;
     pwm_ch_handlers[CONTROL_CH_2] = pwm_handler;
 
     /* Channel 3 */
     pwm_handler.p_htim = &htim2;
-    pwm_handler.control_ch = CONTROL_CH_3;
     pwm_handler.timer_ch = TIM_CHANNEL_3;
     pwm_ch_handlers[CONTROL_CH_3] = pwm_handler;
 
     /* Channel 4 */
     pwm_handler.p_htim = &htim2;
-    pwm_handler.control_ch = CONTROL_CH_4;
     pwm_handler.timer_ch = TIM_CHANNEL_4;
     pwm_ch_handlers[CONTROL_CH_4] = pwm_handler;
 
     /* Channel 5 */
     pwm_handler.p_htim = &htim21;
-    pwm_handler.control_ch = CONTROL_CH_5;
     pwm_handler.timer_ch = TIM_CHANNEL_1;
     pwm_ch_handlers[CONTROL_CH_5] = pwm_handler;
 
     /* Channel 6 */
     pwm_handler.p_htim = &htim21;
-    pwm_handler.control_ch = CONTROL_CH_6;
     pwm_handler.timer_ch = TIM_CHANNEL_2;
     pwm_ch_handlers[CONTROL_CH_6] = pwm_handler;
 
     /* Channel 7 */
     pwm_handler.p_htim = &htim22;
-    pwm_handler.control_ch = CONTROL_CH_7;
     pwm_handler.timer_ch = TIM_CHANNEL_1;
     pwm_ch_handlers[CONTROL_CH_7] = pwm_handler;
 
     /* Channel 8 */
     pwm_handler.p_htim = &htim22;
-    pwm_handler.control_ch = CONTROL_CH_8;
     pwm_handler.timer_ch = TIM_CHANNEL_2;
     pwm_ch_handlers[CONTROL_CH_8] = pwm_handler;
-
-    /* Channel 9 */
-    pwm_handler.p_htim = &htim6;
-    pwm_handler.control_ch = CONTROL_CH_9;
-    pwm_handler.control_pin = CONTROL_9_Pin;
-    pwm_ch_handlers[CONTROL_CH_9] = pwm_handler;
-
-    /* Channel 10 */
-    pwm_handler.p_htim = &htim6;
-    pwm_handler.control_ch = CONTROL_CH_10;
-    pwm_handler.control_pin = CONTROL_10_Pin;
-    pwm_ch_handlers[CONTROL_CH_10] = pwm_handler;
 }
 
 /** ADC Conversion Complete Interrupt Callback */
@@ -946,21 +878,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     send_uart_flag = 1;
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    /* Send value to BSRR register and update counters */
-    GPIOC->BSRR = *p_soft_pwm_buf;
-
-    p_soft_pwm_buf++;
-    duty_cycle_count++;
-
-    if (duty_cycle_count >= DUTY_STEPS)
-    {
-        duty_cycle_count = 0;
-        p_soft_pwm_buf = getDutyCycle();
-    }
 }
 
 /* USER CODE END 4 */
