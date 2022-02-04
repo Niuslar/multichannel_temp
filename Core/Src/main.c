@@ -63,8 +63,8 @@ TIM_HandleTypeDef htim22;
 /* USER CODE BEGIN PV */
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
-volatile uint8_t duty_cycle_count = 0;
-volatile uint16_t *p_soft_pwm_buf;
+volatile uint8_t duty_cycle_counter = 0;
+uint16_t soft_duty_cycle_buf[DUTY_STEPS];
 soft_pwm_handler_t soft_pwm_ch9;
 soft_pwm_handler_t soft_pwm_ch10;
 
@@ -145,7 +145,6 @@ int main(void)
     startADC(&hadc);
     initSoftPWM();
 
-    p_soft_pwm_buf = getDutyCycle();
     /* Set software timer duty cycle */
     setSoftDutyCycle(&soft_pwm_ch9, 60);
     setSoftDutyCycle(&soft_pwm_ch10, 20);
@@ -849,9 +848,11 @@ void initSoftPWM()
 {
     soft_pwm_ch9.control_pin = CONTROL_9_Pin;
     soft_pwm_ch9.p_htim = &htim6;
+    soft_pwm_ch9.p_duty_cycle_buf = soft_duty_cycle_buf;
 
     soft_pwm_ch10.control_pin = CONTROL_10_Pin;
     soft_pwm_ch10.p_htim = &htim6;
+    soft_pwm_ch10.p_duty_cycle_buf = soft_duty_cycle_buf;
 }
 
 /** ADC Conversion Complete Interrupt Callback */
@@ -868,16 +869,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    /* Send value to ODR register and update counters */
-    GPIOC->ODR = *p_soft_pwm_buf;
+    /* Update ODR and counter */
+    GPIOC->ODR = soft_duty_cycle_buf[duty_cycle_counter];
 
-    p_soft_pwm_buf++;
-    duty_cycle_count++;
+    duty_cycle_counter++;
 
-    if (duty_cycle_count >= DUTY_STEPS)
+    /* Reset values when all the steps are done */
+    if (duty_cycle_counter >= DUTY_STEPS)
     {
-        duty_cycle_count = 0;
-        p_soft_pwm_buf = getDutyCycle();
+        duty_cycle_counter = 0;
     }
 }
 

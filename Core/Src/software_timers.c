@@ -69,17 +69,12 @@ void setSoftDutyCycle(soft_pwm_handler_t *p_soft_pwm_h,
         if (step < duty_cycle_percent)
         {
             /* Set the pin */
-            soft_pwm_duty_buf[step] |= p_soft_pwm_h->control_pin;
+            p_soft_pwm_h->p_duty_cycle_buf[step] |= p_soft_pwm_h->control_pin;
         }
         else
         {
             /* Reset pin */
-            soft_pwm_duty_buf[step] &= ~p_soft_pwm_h->control_pin;
+            p_soft_pwm_h->p_duty_cycle_buf[step] &= ~p_soft_pwm_h->control_pin;
         }
     }
-}
-
-uint16_t *getDutyCycle()
-{
-    return soft_pwm_duty_buf;
 }

@@ -18,6 +18,7 @@ typedef struct
 {
     TIM_HandleTypeDef *p_htim;
     uint16_t control_pin;
+    uint16_t *p_duty_cycle_buf;
 } soft_pwm_handler_t;
 
 void startSoftPWM(soft_pwm_handler_t *p_soft_pwm_h);
