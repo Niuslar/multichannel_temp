@@ -30,9 +30,6 @@
  *  in the Device Configuration Tool.
  */
 
-/* Private Variables */
-uint16_t soft_pwm_duty_buf[DUTY_STEPS] = {0};
-
 /**
  * @brief start software PWM with a duty cycle of 0
  * @param pointer to soft pwm handler
@@ -69,11 +66,15 @@ void setSoftDutyCycle(soft_pwm_handler_t *p_soft_pwm_h,
         if (step < duty_cycle_percent)
         {
             /* Set the pin */
+            p_soft_pwm_h->p_duty_cycle_buf[step] &=
+                ~(p_soft_pwm_h->control_pin << 16);
             p_soft_pwm_h->p_duty_cycle_buf[step] |= p_soft_pwm_h->control_pin;
         }
         else
         {
             /* Reset pin */
+            p_soft_pwm_h->p_duty_cycle_buf[step] |=
+                (p_soft_pwm_h->control_pin << 16);
             p_soft_pwm_h->p_duty_cycle_buf[step] &= ~p_soft_pwm_h->control_pin;
         }
     }
