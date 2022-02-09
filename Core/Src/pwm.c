@@ -1,5 +1,5 @@
 /**
- * @file timers.c
+ * @file pwm.c
  */
 
 /*
@@ -7,7 +7,7 @@
  *      Author: niuslar
  */
 
-#include "timers.h"
+#include "pwm.h"
 
 /** All timers start with a counter period of 1600
  *  and a prescaler of 400. With a 32MHz clock source, this is 50Hz.
@@ -19,19 +19,41 @@
 
 /**
  * @brief Start PWM
- * @param pointer to pwm handler
- * @retval none
- */
-void startPWM(pwm_handler_t *p_pwm_handler)
+ * @param p_htim -> pointer to the timer handler
+ * @param TIM_CHANNEL_X is the timer channel and it can be one of the following:
+ *   		TIM_CHANNEL_1
+ * 			TIM_CHANNEL_2
+ * 			TIM_CHANNEL_3
+ * 			TIM_CHANNEL_4
+ * @retval pwm_handler
+ * */
+pwm_handler_t startPWM(TIM_HandleTypeDef *p_htim, uint8_t TIM_CHANNEL_X)
 {
-    /* Check for errors */
-    if (p_pwm_handler->p_htim == NULL)
+    pwm_handler_t pwm_handler;
+
+    /* Check p_htim is valid*/
+    if (p_htim == NULL)
     {
         Error_Handler();
     }
 
-    /* Start PWM with default config */
-    HAL_TIM_PWM_Start(p_pwm_handler->p_htim, p_pwm_handler->timer_ch);
+    /* Check timer channels are valid */
+    if (TIM_CHANNEL_X != TIM_CHANNEL_1 && TIM_CHANNEL_X != TIM_CHANNEL_2 &&
+        TIM_CHANNEL_X != TIM_CHANNEL_3 && TIM_CHANNEL_X != TIM_CHANNEL_4)
+    {
+        Error_Handler();
+    }
+
+    pwm_handler.p_htim = p_htim;
+    pwm_handler.timer_ch = TIM_CHANNEL_X;
+
+    /* Start PWM */
+    if (HAL_TIM_PWM_Start(p_htim, TIM_CHANNEL_X) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    return pwm_handler;
 }
 
 /**

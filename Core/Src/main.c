@@ -23,9 +23,9 @@
 /* USER CODE BEGIN Includes */
 #include "adc_data.h"
 #include "pid_control.h"
+#include "pwm.h"
 #include "telemetry.h"
 #include "temperature.h"
-#include "timers.h"
 #include "uart_com.h"
 
 /* USER CODE END Includes */
@@ -33,10 +33,23 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+enum
+{
+    PWM_CHANNEL_1,
+    PWM_CHANNEL_2,
+    PWM_CHANNEL_3,
+    PWM_CHANNEL_4,
+    PWM_CHANNEL_5,
+    PWM_CHANNEL_6,
+    PWM_CHANNEL_7,
+    PWM_CHANNEL_8
+};
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define PWM_CHANNELS 8
 
 /* USER CODE END PD */
 
@@ -60,13 +73,18 @@ TIM_HandleTypeDef htim21;
 TIM_HandleTypeDef htim22;
 
 /* USER CODE BEGIN PV */
-pwm_handler_t pwm_ch_handlers[CONTROL_CHANNELS];
+pwm_handler_t pwm_handlers[PWM_CHANNELS];
+
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
 
+TIM_HandleTypeDef *p_pwm_htim[PWM_CHANNELS];
+uint8_t pwm_timer_channels[PWM_CHANNELS];
+
 /* USER CODE END PV */
 
-/* Private function prototypes -----------------------------------------------*/
+/* Private function prototypes
+   -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
@@ -79,8 +97,6 @@ static void MX_TIM21_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
-static void initPWMHandlers();
 
 /* USER CODE END PFP */
 
@@ -96,6 +112,25 @@ static void initPWMHandlers();
 int main(void)
 {
     /* USER CODE BEGIN 1 */
+    /* Assign timers for each channel */
+    p_pwm_htim[PWM_CHANNEL_1] = &htim2;
+    p_pwm_htim[PWM_CHANNEL_2] = &htim2;
+    p_pwm_htim[PWM_CHANNEL_3] = &htim2;
+    p_pwm_htim[PWM_CHANNEL_4] = &htim2;
+    p_pwm_htim[PWM_CHANNEL_5] = &htim21;
+    p_pwm_htim[PWM_CHANNEL_6] = &htim21;
+    p_pwm_htim[PWM_CHANNEL_7] = &htim22;
+    p_pwm_htim[PWM_CHANNEL_8] = &htim22;
+
+    /* Assign TIM_CHANNEL_X for each PWM channel */
+    pwm_timer_channels[PWM_CHANNEL_1] = TIM_CHANNEL_1;
+    pwm_timer_channels[PWM_CHANNEL_2] = TIM_CHANNEL_2;
+    pwm_timer_channels[PWM_CHANNEL_3] = TIM_CHANNEL_3;
+    pwm_timer_channels[PWM_CHANNEL_4] = TIM_CHANNEL_4;
+    pwm_timer_channels[PWM_CHANNEL_5] = TIM_CHANNEL_1;
+    pwm_timer_channels[PWM_CHANNEL_6] = TIM_CHANNEL_2;
+    pwm_timer_channels[PWM_CHANNEL_7] = TIM_CHANNEL_1;
+    pwm_timer_channels[PWM_CHANNEL_8] = TIM_CHANNEL_2;
 
     /* USER CODE END 1 */
 
@@ -136,33 +171,20 @@ int main(void)
     /* USER CODE BEGIN 2 */
 
     startADC(&hadc);
-    initPWMHandlers();
 
-    /* Start PWM Channels */
+    /*  Initialise PWM Handlers and start PWM */
+    for (uint8_t channel = 0; channel < PWM_CHANNELS; channel++)
+    {
+        pwm_handlers[channel] =
+            startPWM(p_pwm_htim[channel], pwm_timer_channels[channel]);
+    }
 
-    /* Start all control channels */
+    /* Set Duty Cycle at 50% for all PWM channels */
+    for (uint8_t channel = 0; channel < PWM_CHANNELS; channel++)
+    {
+        setDutyCycle(&pwm_handlers[channel], 50);
+    }
 
-    /* Hardware timers */
-    startPWM(&pwm_ch_handlers[CONTROL_CH_1]);
-    startPWM(&pwm_ch_handlers[CONTROL_CH_2]);
-    startPWM(&pwm_ch_handlers[CONTROL_CH_3]);
-    startPWM(&pwm_ch_handlers[CONTROL_CH_4]);
-    startPWM(&pwm_ch_handlers[CONTROL_CH_5]);
-    startPWM(&pwm_ch_handlers[CONTROL_CH_6]);
-    startPWM(&pwm_ch_handlers[CONTROL_CH_7]);
-    startPWM(&pwm_ch_handlers[CONTROL_CH_8]);
-
-    /* Set duty cycle */
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_1], 40);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_2], 99);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_3], 170);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_4], 70);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_5], 40);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_6], 50);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_7], 60);
-    setDutyCycle(&pwm_ch_handlers[CONTROL_CH_8], 170);
-
-    /* Initialise ADC reading */
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -817,56 +839,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-/**
- * @brief Create handlers for hardware control channels
- * @param None
- * @retval None
- */
-static void initPWMHandlers()
-{
-    /* Handlers channels 1-10 */
-    pwm_handler_t pwm_handler;
-
-    /*Channel 1*/
-    pwm_handler.p_htim = &htim2;
-    pwm_handler.timer_ch = TIM_CHANNEL_1;
-    pwm_ch_handlers[CONTROL_CH_1] = pwm_handler;
-
-    /* Channel 2 */
-    pwm_handler.p_htim = &htim2;
-    pwm_handler.timer_ch = TIM_CHANNEL_2;
-    pwm_ch_handlers[CONTROL_CH_2] = pwm_handler;
-
-    /* Channel 3 */
-    pwm_handler.p_htim = &htim2;
-    pwm_handler.timer_ch = TIM_CHANNEL_3;
-    pwm_ch_handlers[CONTROL_CH_3] = pwm_handler;
-
-    /* Channel 4 */
-    pwm_handler.p_htim = &htim2;
-    pwm_handler.timer_ch = TIM_CHANNEL_4;
-    pwm_ch_handlers[CONTROL_CH_4] = pwm_handler;
-
-    /* Channel 5 */
-    pwm_handler.p_htim = &htim21;
-    pwm_handler.timer_ch = TIM_CHANNEL_1;
-    pwm_ch_handlers[CONTROL_CH_5] = pwm_handler;
-
-    /* Channel 6 */
-    pwm_handler.p_htim = &htim21;
-    pwm_handler.timer_ch = TIM_CHANNEL_2;
-    pwm_ch_handlers[CONTROL_CH_6] = pwm_handler;
-
-    /* Channel 7 */
-    pwm_handler.p_htim = &htim22;
-    pwm_handler.timer_ch = TIM_CHANNEL_1;
-    pwm_ch_handlers[CONTROL_CH_7] = pwm_handler;
-
-    /* Channel 8 */
-    pwm_handler.p_htim = &htim22;
-    pwm_handler.timer_ch = TIM_CHANNEL_2;
-    pwm_ch_handlers[CONTROL_CH_8] = pwm_handler;
-}
 
 /** ADC Conversion Complete Interrupt Callback */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)

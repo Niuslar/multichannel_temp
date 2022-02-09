@@ -1,5 +1,5 @@
 /**
- * @file timers.h
+ * @file pwm.h
  */
 
 /*
@@ -7,13 +7,10 @@
  *      Author: niuslar
  */
 
-#ifndef TIMERS_H_
-#define TIMERS_H_
+#ifndef PWM_H_
+#define PWM_H_
 
 #include "main.h"
-
-#define CONTROL_CHANNELS 8
-
 /**
  * @note The value of timer_ch must we one of the following:
  * 			TIM_CHANNEL_1
@@ -27,20 +24,8 @@ typedef struct
     uint8_t timer_ch;
 } pwm_handler_t;
 
-enum CONTROL_CH
-{
-    CONTROL_CH_1,
-    CONTROL_CH_2,
-    CONTROL_CH_3,
-    CONTROL_CH_4,
-    CONTROL_CH_5,
-    CONTROL_CH_6,
-    CONTROL_CH_7,
-    CONTROL_CH_8,
-};
-
 /* Exported Function Prototypes */
-void startPWM(pwm_handler_t *p_pwm_handler);
+pwm_handler_t startPWM(TIM_HandleTypeDef *p_htim, uint8_t TIM_CHANNEL_X);
 void setDutyCycle(pwm_handler_t *p_pwm_handler, uint8_t duty_cycle_percent);
 
-#endif /* TIMERS_H_ */
+#endif /* PWM_H_ */
