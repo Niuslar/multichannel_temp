@@ -25,7 +25,7 @@ typedef struct
 } pwm_handler_t;
 
 /* Exported Function Prototypes */
-pwm_handler_t startPWM(TIM_HandleTypeDef *p_htim, uint8_t TIM_CHANNEL_X);
+pwm_handler_t startPWM(TIM_HandleTypeDef *p_htim, uint8_t timer_channel);
 void setDutyCycle(pwm_handler_t *p_pwm_handler, uint8_t duty_cycle_percent);
 
 #endif /* PWM_H_ */

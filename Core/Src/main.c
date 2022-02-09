@@ -73,11 +73,13 @@ TIM_HandleTypeDef htim21;
 TIM_HandleTypeDef htim22;
 
 /* USER CODE BEGIN PV */
-pwm_handler_t pwm_handlers[PWM_CHANNELS];
 
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
 
+/* Hardware PWM handlers and
+ * configuration parameters for all channels */
+pwm_handler_t pwm_handlers[PWM_CHANNELS];
 TIM_HandleTypeDef *p_pwm_htim[PWM_CHANNELS];
 uint8_t pwm_timer_channels[PWM_CHANNELS];
 
