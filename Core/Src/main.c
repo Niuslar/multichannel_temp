@@ -23,18 +23,33 @@
 /* USER CODE BEGIN Includes */
 #include "adc_data.h"
 #include "pid_control.h"
+#include "pwm.h"
 #include "telemetry.h"
 #include "temperature.h"
 #include "uart_com.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+enum
+{
+    PWM_CHANNEL_1,
+    PWM_CHANNEL_2,
+    PWM_CHANNEL_3,
+    PWM_CHANNEL_4,
+    PWM_CHANNEL_5,
+    PWM_CHANNEL_6,
+    PWM_CHANNEL_7,
+    PWM_CHANNEL_8
+};
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define PWM_CHANNELS 8
 
 /* USER CODE END PD */
 
@@ -62,9 +77,16 @@ TIM_HandleTypeDef htim22;
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
 
+/* Hardware PWM handlers and
+ * configuration parameters for all channels */
+pwm_handler_t pwm_handlers[PWM_CHANNELS];
+TIM_HandleTypeDef *p_pwm_htim[PWM_CHANNELS];
+uint8_t pwm_timer_channels[PWM_CHANNELS];
+
 /* USER CODE END PV */
 
-/* Private function prototypes -----------------------------------------------*/
+/* Private function prototypes
+   -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
@@ -92,6 +114,25 @@ static void MX_USART2_UART_Init(void);
 int main(void)
 {
     /* USER CODE BEGIN 1 */
+    /* Assign timers for each channel */
+    p_pwm_htim[PWM_CHANNEL_1] = &htim2;
+    p_pwm_htim[PWM_CHANNEL_2] = &htim2;
+    p_pwm_htim[PWM_CHANNEL_3] = &htim2;
+    p_pwm_htim[PWM_CHANNEL_4] = &htim2;
+    p_pwm_htim[PWM_CHANNEL_5] = &htim21;
+    p_pwm_htim[PWM_CHANNEL_6] = &htim21;
+    p_pwm_htim[PWM_CHANNEL_7] = &htim22;
+    p_pwm_htim[PWM_CHANNEL_8] = &htim22;
+
+    /* Assign TIM_CHANNEL_X for each PWM channel */
+    pwm_timer_channels[PWM_CHANNEL_1] = TIM_CHANNEL_1;
+    pwm_timer_channels[PWM_CHANNEL_2] = TIM_CHANNEL_2;
+    pwm_timer_channels[PWM_CHANNEL_3] = TIM_CHANNEL_3;
+    pwm_timer_channels[PWM_CHANNEL_4] = TIM_CHANNEL_4;
+    pwm_timer_channels[PWM_CHANNEL_5] = TIM_CHANNEL_1;
+    pwm_timer_channels[PWM_CHANNEL_6] = TIM_CHANNEL_2;
+    pwm_timer_channels[PWM_CHANNEL_7] = TIM_CHANNEL_1;
+    pwm_timer_channels[PWM_CHANNEL_8] = TIM_CHANNEL_2;
 
     /* USER CODE END 1 */
 
@@ -131,8 +172,20 @@ int main(void)
     MX_USART2_UART_Init();
     /* USER CODE BEGIN 2 */
 
-    /* Initialise ADC reading */
     startADC(&hadc);
+
+    /*  Initialise PWM Handlers and start PWM */
+    for (uint8_t channel = 0; channel < PWM_CHANNELS; channel++)
+    {
+        pwm_handlers[channel] =
+            startPWM(p_pwm_htim[channel], pwm_timer_channels[channel]);
+    }
+
+    /* Set Duty Cycle at 50% for all PWM channels */
+    for (uint8_t channel = 0; channel < PWM_CHANNELS; channel++)
+    {
+        setDutyCycle(&pwm_handlers[channel], 50);
+    }
 
     /* USER CODE END 2 */
 
@@ -518,9 +571,9 @@ static void MX_TIM2_Init(void)
 
     /* USER CODE END TIM2_Init 1 */
     htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 0;
+    htim2.Init.Prescaler = 400 - 1;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim2.Init.Period = 3199;
+    htim2.Init.Period = 1600 - 1;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -536,7 +589,7 @@ static void MX_TIM2_Init(void)
     {
         Error_Handler();
     }
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
     {
@@ -587,9 +640,9 @@ static void MX_TIM21_Init(void)
 
     /* USER CODE END TIM21_Init 1 */
     htim21.Instance = TIM21;
-    htim21.Init.Prescaler = 0;
+    htim21.Init.Prescaler = 400 - 1;
     htim21.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim21.Init.Period = 3199;
+    htim21.Init.Period = 1600 - 1;
     htim21.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim21.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim21) != HAL_OK)
@@ -649,9 +702,9 @@ static void MX_TIM22_Init(void)
 
     /* USER CODE END TIM22_Init 1 */
     htim22.Instance = TIM22;
-    htim22.Init.Prescaler = 0;
+    htim22.Init.Prescaler = 400 - 1;
     htim22.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim22.Init.Period = 3199;
+    htim22.Init.Period = 1600 - 1;
     htim22.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim22.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim22) != HAL_OK)
