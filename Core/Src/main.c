@@ -23,7 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "adc_data.h"
 #include "pid_control.h"
-#include "software_timers.h"
+#include "soft_pwm.h"
 #include "telemetry.h"
 #include "temperature.h"
 #include "uart_com.h"
@@ -37,6 +37,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define SOFT_PWM_CHANNELS 2
 
 /* USER CODE END PD */
 
@@ -63,10 +64,12 @@ TIM_HandleTypeDef htim22;
 /* USER CODE BEGIN PV */
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
-volatile uint8_t duty_cycle_counter = 0;
-uint32_t soft_duty_cycle_buf[DUTY_STEPS];
-soft_pwm_handler_t soft_pwm_ch9;
-soft_pwm_handler_t soft_pwm_ch10;
+
+/* Soft PWM */
+soft_pwm_handler_t soft_pwm_handlers[SOFT_PWM_CHANNELS];
+GPIO_TypeDef *soft_pwm_ports[SOFT_PWM_CHANNELS];
+TIM_HandleTypeDef *soft_pwm_timers[SOFT_PWM_CHANNELS];
+uint16_t soft_pwm_pins[SOFT_PWM_CHANNELS];
 
 /* USER CODE END PV */
 
@@ -102,6 +105,18 @@ void initSoftPWM();
 int main(void)
 {
     /* USER CODE BEGIN 1 */
+
+    /* Set soft pwm pin ports */
+    soft_pwm_ports[0] = CONTROL_9_GPIO_Port;
+    soft_pwm_ports[1] = CONTROL_10_GPIO_Port;
+
+    /* Set soft pwm pins */
+    soft_pwm_pins[0] = CONTROL_9_Pin;
+    soft_pwm_pins[1] = CONTROL_10_Pin;
+
+    /* Set soft pwm timers */
+    soft_pwm_timers[0] = &htim6;
+    soft_pwm_timers[1] = &htim6;
 
     /* USER CODE END 1 */
 
@@ -143,15 +158,17 @@ int main(void)
     /* USER CODE BEGIN 2 */
 
     startADC(&hadc);
-    initSoftPWM();
 
-    /* Set software timer duty cycle */
-    setSoftDutyCycle(&soft_pwm_ch9, 60);
-    setSoftDutyCycle(&soft_pwm_ch10, 100);
-
+    /* Initialise handler and start soft PWM */
+    for (uint8_t channel; channel < SOFT_PWM_CHANNELS; channel++)
+    {
+        soft_pwm_handlers[channel] = startSoftPWM(soft_pwm_ports[channel],
+                                                  soft_pwm_pins[channel],
+                                                  soft_pwm_timers[channel]);
+    }
     /* start software timers */
-    startSoftPWM(&soft_pwm_ch9);
-    startSoftPWM(&soft_pwm_ch10);
+    setSoftDutyCycle(&soft_pwm_handlers[0], 99);
+    setSoftDutyCycle(&soft_pwm_handlers[1], 100);
 
     /* USER CODE END 2 */
 
@@ -844,17 +861,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void initSoftPWM()
-{
-    soft_pwm_ch9.control_pin = CONTROL_9_Pin;
-    soft_pwm_ch9.p_htim = &htim6;
-    soft_pwm_ch9.p_duty_cycle_buf = soft_duty_cycle_buf;
-
-    soft_pwm_ch10.control_pin = CONTROL_10_Pin;
-    soft_pwm_ch10.p_htim = &htim6;
-    soft_pwm_ch10.p_duty_cycle_buf = soft_duty_cycle_buf;
-}
-
 /** ADC Conversion Complete Interrupt Callback */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
@@ -869,8 +875,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    /* Update ODR and counter */
-    GPIOC->BSRR = soft_duty_cycle_buf[duty_cycle_counter];
+    /* Update BSRR for all GPIO ports */
+
+    GPIOA->BSRR = GPIOA_duty_cycle_buf[duty_cycle_counter];
+    GPIOB->BSRR = GPIOB_duty_cycle_buf[duty_cycle_counter];
+    GPIOC->BSRR = GPIOC_duty_cycle_buf[duty_cycle_counter];
 
     duty_cycle_counter++;
 
