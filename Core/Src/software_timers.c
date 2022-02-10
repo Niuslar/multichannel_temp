@@ -10,6 +10,10 @@
 #define MIN_DUTY_CYCLE 0
 #define MAX_DUTY_CYCLE 100
 
+static TIM_HandleTypeDef *p_software_timer;
+static soft_pwm_handler_t registered_soft_pwm[MAX_SOFT_PWM_CHANNELS];
+static uint8_t soft_pwm_counter = 0;
+
 /**
  * @note To simulate the duty cycle of a hardware timer,
  * software timers check the status of the pin and a counter
@@ -31,15 +35,64 @@
  */
 
 /**
- * @brief start software PWM with a duty cycle of 0
- * @param pointer to soft pwm handler
- * @retval None
+ * @brief Initialise the timer that will generate interrupts for software PWM.
+ * @note  It is assumed that only one timer is responsible for running all soft
+ * PWM outputs.
+ *
+ * @param p_timer Pointer to timer handler.
+ * @return NULL if success, error code otherwise.
  */
-void startSoftPWM(soft_pwm_handler_t *p_soft_pwm_h)
+uint8_t startSoftPWMTimer(TIM_HandleTypeDef *p_timer)
 {
-    /* Start Clock */
-    /* Start timer with interrupt */
-    HAL_TIM_Base_Start_IT(p_soft_pwm_h->p_htim);
+    if (p_timer == NULL)
+    {
+        return ERROR_NULL_POINTER;
+    }
+    /* It is possible to completely reorganise the timer here by following the
+     * format of CubeMX timers setup. Specifically, it is possible to change
+     * prescaler, Period, etc. It would also be trivial to change interrupt
+     * behaviour of the timer.
+     * Whether this is necessary or user should be responsible for setting up
+     * the timer remains to be seen.
+     */
+    p_software_timer = p_timer;
+    HAL_TIM_Base_Start_IT(p_software_timer);
+    return NO_ERROR;
+}
+
+/**
+ * @brief Register GPIO port and pin as software PWM.
+ *
+ * @param p_pwm_handler Pointer to a software PWM handler that will contain
+ * registered pin.
+ * @param p_port GPIO port.
+ * @param pin GPIO pin.
+ * @return NULL if success, error code otherwise.
+ */
+uint8_t registerSoftPWM(soft_pwm_handler_t *p_pwm_handler,
+                        GPIO_TypeDef *p_port,
+                        uint32_t pin)
+{
+    if ((p_pwm_handler == NULL) || (p_port == NULL))
+    {
+        return ERROR_NULL_POINTER;
+    }
+    if (!IS_GPIO_PIN(pin))
+    {
+        return ERROR_NOT_PIN;
+    }
+    if (soft_pwm_counter >= MAX_SOFT_PWM_CHANNELS)
+    {
+        return ERROR_MAX_CHANNEL_COUNT;
+    }
+
+    // TODO: check if returning the pointer to external entity is even
+    // necessary.
+    p_pwm_handler->p_port = p_port;
+    p_pwm_handler->pin = pin;
+    registered_soft_pwm[soft_pwm_counter] = p_pwm_handler;
+    soft_pwm_counter++;
+    return NO_ERROR;
 }
 
 /**
@@ -79,3 +132,5 @@ void setSoftDutyCycle(soft_pwm_handler_t *p_soft_pwm_h,
         }
     }
 }
+
+void tickSoftWPM() {}
