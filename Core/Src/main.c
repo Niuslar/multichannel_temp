@@ -64,9 +64,8 @@ TIM_HandleTypeDef htim22;
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
 volatile uint8_t duty_cycle_counter = 0;
-uint32_t soft_duty_cycle_buf[DUTY_STEPS];
-soft_pwm_handler_t soft_pwm_ch9;
-soft_pwm_handler_t soft_pwm_ch10;
+soft_pwm_handler_t *p_aux_heater_1;
+soft_pwm_handler_t *p_aux_heater_2;
 
 /* USER CODE END PV */
 
@@ -89,8 +88,7 @@ void initSoftPWM();
 
 /* USER CODE END PFP */
 
-/* Private user code
-   ---------------------------------------------------------*/
+/* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -143,16 +141,23 @@ int main(void)
     /* USER CODE BEGIN 2 */
 
     startADC(&hadc);
-    initSoftPWM();
 
-    /* Set software timer duty cycle */
-    setSoftDutyCycle(&soft_pwm_ch9, 60);
-    setSoftDutyCycle(&soft_pwm_ch10, 100);
-
-    /* start software timers */
-    startSoftPWM(&soft_pwm_ch9);
-    startSoftPWM(&soft_pwm_ch10);
-
+    /* setup soft PWM channels*/
+    startSoftPwmTimer(&htim6);
+    if (registerSoftPwm(p_aux_heater_1, CONTROL_9_GPIO_Port, CONTROL_9_Pin) !=
+        NO_ERROR)
+    {
+        Error_Handler();
+    }
+    if (registerSoftPwm(p_aux_heater_2, CONTROL_10_GPIO_Port, CONTROL_10_Pin) !=
+        NO_ERROR)
+    {
+        Error_Handler();
+    }
+#ifdef DEBUG
+    setSoftPwmDutyCycle(p_aux_heater_1, 35);
+    setSoftPwmDutyCycle(p_aux_heater_2, 65);
+#endif
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -844,17 +849,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void initSoftPWM()
-{
-    soft_pwm_ch9.control_pin = CONTROL_9_Pin;
-    soft_pwm_ch9.p_htim = &htim6;
-    soft_pwm_ch9.p_duty_cycle_buf = soft_duty_cycle_buf;
-
-    soft_pwm_ch10.control_pin = CONTROL_10_Pin;
-    soft_pwm_ch10.p_htim = &htim6;
-    soft_pwm_ch10.p_duty_cycle_buf = soft_duty_cycle_buf;
-}
-
 /** ADC Conversion Complete Interrupt Callback */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
@@ -865,20 +859,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     send_uart_flag = 1;
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    /* Update ODR and counter */
-    GPIOC->BSRR = soft_duty_cycle_buf[duty_cycle_counter];
-
-    duty_cycle_counter++;
-
-    /* Reset values when all the steps are done */
-    if (duty_cycle_counter >= DUTY_STEPS)
-    {
-        duty_cycle_counter = 0;
-    }
 }
 
 /* USER CODE END 4 */
