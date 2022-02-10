@@ -85,7 +85,7 @@ uint8_t startSoftPwmTimer(TIM_HandleTypeDef *p_timer)
  * @param pin GPIO pin.
  * @return NULL if success, error code otherwise.
  */
-uint8_t registerSoftPwm(soft_pwm_handler_t const *p_soft_pwm_handler,
+uint8_t registerSoftPwm(soft_pwm_handler_t *p_soft_pwm_handler,
                         GPIO_TypeDef *p_port,
                         uint32_t pin)
 {
