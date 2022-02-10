@@ -14,6 +14,8 @@ static TIM_HandleTypeDef *p_software_timer;
 static soft_pwm_handler_t registered_soft_pwm[MAX_SOFT_PWM_CHANNELS];
 static uint8_t soft_pwm_counter = 0;
 
+void tickSoftPWM(TIM_HandleTypeDef *htim);
+
 /**
  * @note To simulate the duty cycle of a hardware timer,
  * software timers check the status of the pin and a counter
@@ -56,7 +58,19 @@ uint8_t startSoftPWMTimer(TIM_HandleTypeDef *p_timer)
      * the timer remains to be seen.
      */
     p_software_timer = p_timer;
-    HAL_TIM_Base_Start_IT(p_software_timer);
+    /* Now need to register a callback to trigger on period elapse event and
+     * start timer.*/
+    if (HAL_TIM_RegisterCallback(p_timer,
+                                 HAL_TIM_PERIOD_ELAPSED_CB_ID,
+                                 tickSoftPWM) != HAL_OK)
+    {
+        return ERROR_CALLBACK_FAIL;
+    }
+
+    if(HAL_TIM_Base_Start_IT(p_software_timer)!= HAL_OK)
+    	{
+    	return ERROR_START_FAIL;
+    	}
     return NO_ERROR;
 }
 
@@ -90,7 +104,9 @@ uint8_t registerSoftPWM(soft_pwm_handler_t *p_pwm_handler,
     // necessary.
     p_pwm_handler->p_port = p_port;
     p_pwm_handler->pin = pin;
-    registered_soft_pwm[soft_pwm_counter] = p_pwm_handler;
+    registered_soft_pwm[soft_pwm_counter].p_port = p_port;
+    registered_soft_pwm[soft_pwm_counter].pin = pin;
+
     soft_pwm_counter++;
     return NO_ERROR;
 }
@@ -114,23 +130,23 @@ void setSoftDutyCycle(soft_pwm_handler_t *p_soft_pwm_h,
     }
 
     /* Update buffer with the right values */
-    for (uint8_t step = 0; step < DUTY_STEPS; step++)
-    {
-        if (step < duty_cycle_percent)
-        {
-            /* Set the pin */
-            p_soft_pwm_h->p_duty_cycle_buf[step] &=
-                ~(p_soft_pwm_h->control_pin << 16);
-            p_soft_pwm_h->p_duty_cycle_buf[step] |= p_soft_pwm_h->control_pin;
-        }
-        else
-        {
-            /* Reset pin */
-            p_soft_pwm_h->p_duty_cycle_buf[step] |=
-                (p_soft_pwm_h->control_pin << 16);
-            p_soft_pwm_h->p_duty_cycle_buf[step] &= ~p_soft_pwm_h->control_pin;
-        }
-    }
+//    for (uint8_t step = 0; step < DUTY_STEPS; step++)
+//    {
+//        if (step < duty_cycle_percent)
+//        {
+//            /* Set the pin */
+//            p_soft_pwm_h->p_duty_cycle_buf[step] &=
+//                ~(p_soft_pwm_h->control_pin << 16);
+//            p_soft_pwm_h->p_duty_cycle_buf[step] |= p_soft_pwm_h->control_pin;
+//        }
+//        else
+//        {
+//            /* Reset pin */
+//            p_soft_pwm_h->p_duty_cycle_buf[step] |=
+//                (p_soft_pwm_h->control_pin << 16);
+//            p_soft_pwm_h->p_duty_cycle_buf[step] &= ~p_soft_pwm_h->control_pin;
+//        }
+//    }
 }
 
-void tickSoftWPM() {}
+void tickSoftPWM(TIM_HandleTypeDef *htim) {}

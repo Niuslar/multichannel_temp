@@ -20,7 +20,9 @@ enum ERROR_CODES
     NO_ERROR = 0,
     ERROR_NULL_POINTER,
     ERROR_NOT_PIN,
-    ERROR_MAX_CHANNEL_COUNT
+    ERROR_MAX_CHANNEL_COUNT,
+    ERROR_CALLBACK_FAIL,
+    ERROR_START_FAIL
 };
 
 /* This structure essentially defines what GPIO port and pin the output should
