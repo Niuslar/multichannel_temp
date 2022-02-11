@@ -23,8 +23,8 @@
 /* USER CODE BEGIN Includes */
 #include "adc_data.h"
 #include "pid_control.h"
-#include "soft_pwm.h"
 #include "pwm.h"
+#include "soft_pwm.h"
 #include "telemetry.h"
 #include "temperature.h"
 #include "uart_com.h"
@@ -77,7 +77,7 @@ TIM_HandleTypeDef htim22;
 /* USER CODE BEGIN PV */
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
-volatile uint8_t duty_cycle_counter = 0;
+
 soft_pwm_id_t aux_heater_1;
 soft_pwm_id_t aux_heater_2;
 
