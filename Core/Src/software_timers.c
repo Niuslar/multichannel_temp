@@ -85,11 +85,15 @@ uint8_t startSoftPwmTimer(TIM_HandleTypeDef *p_timer)
  * @param pin GPIO pin.
  * @return NULL if success, error code otherwise.
  */
-uint8_t registerSoftPwm(soft_pwm_handler_t *p_soft_pwm_handler,
+uint8_t registerSoftPwm(soft_pwm_handler_t **p_soft_pwm_handler,
                         GPIO_TypeDef *p_port,
                         uint32_t pin)
 {
-    if ((p_soft_pwm_handler == NULL) || (p_port == NULL))
+    // Shouldn't we initialise the pointer before checking it's NULL?
+    *p_soft_pwm_handler = &(registered_soft_pwm[instance_counter]);
+
+    // Or maybe we could simply remove this check for p_soft_pwm_handler
+    if ((*p_soft_pwm_handler == NULL) || (p_port == NULL))
     {
         return ERROR_NULL_POINTER;
     }
@@ -107,7 +111,6 @@ uint8_t registerSoftPwm(soft_pwm_handler_t *p_soft_pwm_handler,
     registered_soft_pwm[instance_counter].p_port = p_port;
     registered_soft_pwm[instance_counter].pin = pin;
     registered_soft_pwm[instance_counter].duty_cycle = DEFAULT_DUTY_CYCLE;
-    p_soft_pwm_handler = &(registered_soft_pwm[instance_counter]);
     instance_counter++;
     return NO_ERROR;
 }
@@ -148,7 +151,8 @@ void tickSoftPwm(TIM_HandleTypeDef *htim)
     for (uint8_t instance = 0; instance < instance_counter; instance++)
     {
         pin_state = GPIO_PIN_RESET;
-        if (pwm_counter >= registered_soft_pwm[instance].duty_cycle)
+        // This should be <
+        if (pwm_counter < registered_soft_pwm[instance].duty_cycle)
         {
             pin_state = GPIO_PIN_SET;
         }

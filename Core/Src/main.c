@@ -144,13 +144,18 @@ int main(void)
 
     /* setup soft PWM channels*/
     startSoftPwmTimer(&htim6);
-    if (registerSoftPwm(p_aux_heater_1, CONTROL_9_GPIO_Port, CONTROL_9_Pin) !=
+
+    // I think we should pass the address of the pointer,
+    // otherwise registerSoftPwm will create a copy of the pointer
+    // and p_aux_heater_1 will remain NULL
+    if (registerSoftPwm(&p_aux_heater_1, CONTROL_9_GPIO_Port, CONTROL_9_Pin) !=
         NO_ERROR)
     {
         Error_Handler();
     }
-    if (registerSoftPwm(p_aux_heater_2, CONTROL_10_GPIO_Port, CONTROL_10_Pin) !=
-        NO_ERROR)
+    if (registerSoftPwm(&p_aux_heater_2,
+                        CONTROL_10_GPIO_Port,
+                        CONTROL_10_Pin) != NO_ERROR)
     {
         Error_Handler();
     }

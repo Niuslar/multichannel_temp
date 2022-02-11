@@ -36,7 +36,9 @@ typedef struct
 } soft_pwm_handler_t;
 
 uint8_t startSoftPwmTimer(TIM_HandleTypeDef *p_timer);
-uint8_t registerSoftPwm(soft_pwm_handler_t *p_soft_pwm_handler,
+
+// Changed the first parameter to be a pointer to a pointer
+uint8_t registerSoftPwm(soft_pwm_handler_t **p_soft_pwm_handler,
                         GPIO_TypeDef *p_port,
                         uint32_t pin);
 void setSoftPwmDutyCycle(soft_pwm_handler_t *p_soft_pwm_handler,
