@@ -1,5 +1,5 @@
 /**
- * @file software_timers.h
+ * @file soft_pwm.h
  */
 
 /*
@@ -7,8 +7,8 @@
  *      Author: niuslar
  */
 
-#ifndef SOFTWARE_TIMERS_H_
-#define SOFTWARE_TIMERS_H_
+#ifndef SOFT_PWM_H_
+#define SOFT_PWM_H_
 
 #include "main.h"
 #define MAX_SOFT_PWM_CHANNELS 5
@@ -44,4 +44,4 @@ uint8_t registerSoftPwm(soft_pwm_id_t *p_soft_pwm_id,
                         uint32_t pin);
 void setSoftPwmDutyCycle(soft_pwm_id_t soft_pwm_id, uint8_t duty_cycle_percent);
 
-#endif /* SOFTWARE_TIMERS_H_ */
+#endif /* SOFT_PWM_H_ */

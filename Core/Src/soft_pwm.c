@@ -1,11 +1,11 @@
 /*
- * software_timers.c
+ * soft_pwm.c
  *
  *  Created on: 4 Feb 2022
  *      Author: niuslar
  */
 
-#include "software_timers.h"
+#include "soft_pwm.h"
 
 #define MAX_COUNT 100
 
