@@ -101,8 +101,6 @@ uint8_t registerSoftPwm(soft_pwm_id_t *p_soft_pwm_id,
         return ERROR_MAX_CHANNEL_COUNT;
     }
 
-    // TODO: check if returning the pointer to external entity is even
-    // necessary.
     registered_soft_pwm[instance_counter].p_port = p_port;
     registered_soft_pwm[instance_counter].pin = pin;
     registered_soft_pwm[instance_counter].duty_cycle = DEFAULT_DUTY_CYCLE;
@@ -118,8 +116,7 @@ uint8_t registerSoftPwm(soft_pwm_id_t *p_soft_pwm_id,
  * @param soft pwm id code
  * @retval None
  */
-void setSoftPwmDutyCycle(soft_pwm_id_t p_soft_pwm_id,
-                         uint8_t duty_cycle_percent)
+void setSoftPwmDutyCycle(soft_pwm_id_t soft_pwm_id, uint8_t duty_cycle_percent)
 {
     /* Check Duty Cycle is within a valid range. */
 #ifdef FORCE_LIMITS
@@ -128,7 +125,7 @@ void setSoftPwmDutyCycle(soft_pwm_id_t p_soft_pwm_id,
         duty_cycle_percent = MAX_COUNT;
     }
 #endif
-    registered_soft_pwm[p_soft_pwm_id].duty_cycle = duty_cycle_percent;
+    registered_soft_pwm[soft_pwm_id].duty_cycle = duty_cycle_percent;
 }
 
 /**

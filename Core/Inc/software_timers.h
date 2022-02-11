@@ -42,7 +42,6 @@ uint8_t startSoftPwmTimer(TIM_HandleTypeDef *p_timer);
 uint8_t registerSoftPwm(soft_pwm_id_t *p_soft_pwm_id,
                         GPIO_TypeDef *p_port,
                         uint32_t pin);
-void setSoftPwmDutyCycle(soft_pwm_id_t p_soft_pwm_id,
-                         uint8_t duty_cycle_percent);
+void setSoftPwmDutyCycle(soft_pwm_id_t soft_pwm_id, uint8_t duty_cycle_percent);
 
 #endif /* SOFTWARE_TIMERS_H_ */
