@@ -35,13 +35,14 @@ typedef struct
     uint8_t duty_cycle;
 } soft_pwm_handler_t;
 
+typedef uint8_t soft_pwm_id_t;
+
 uint8_t startSoftPwmTimer(TIM_HandleTypeDef *p_timer);
 
-// Changed the first parameter to be a pointer to a pointer
-uint8_t registerSoftPwm(soft_pwm_handler_t **p_soft_pwm_handler,
+uint8_t registerSoftPwm(soft_pwm_id_t *p_soft_pwm_id,
                         GPIO_TypeDef *p_port,
                         uint32_t pin);
-void setSoftPwmDutyCycle(soft_pwm_handler_t *p_soft_pwm_handler,
+void setSoftPwmDutyCycle(soft_pwm_id_t p_soft_pwm_id,
                          uint8_t duty_cycle_percent);
 
 #endif /* SOFTWARE_TIMERS_H_ */

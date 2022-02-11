@@ -64,8 +64,8 @@ TIM_HandleTypeDef htim22;
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
 volatile uint8_t duty_cycle_counter = 0;
-soft_pwm_handler_t *p_aux_heater_1;
-soft_pwm_handler_t *p_aux_heater_2;
+soft_pwm_id_t aux_heater_1;
+soft_pwm_id_t aux_heater_2;
 
 /* USER CODE END PV */
 
@@ -145,23 +145,19 @@ int main(void)
     /* setup soft PWM channels*/
     startSoftPwmTimer(&htim6);
 
-    // I think we should pass the address of the pointer,
-    // otherwise registerSoftPwm will create a copy of the pointer
-    // and p_aux_heater_1 will remain NULL
-    if (registerSoftPwm(&p_aux_heater_1, CONTROL_9_GPIO_Port, CONTROL_9_Pin) !=
+    if (registerSoftPwm(&aux_heater_1, CONTROL_9_GPIO_Port, CONTROL_9_Pin) !=
         NO_ERROR)
     {
         Error_Handler();
     }
-    if (registerSoftPwm(&p_aux_heater_2,
-                        CONTROL_10_GPIO_Port,
-                        CONTROL_10_Pin) != NO_ERROR)
+    if (registerSoftPwm(&aux_heater_2, CONTROL_10_GPIO_Port, CONTROL_10_Pin) !=
+        NO_ERROR)
     {
         Error_Handler();
     }
 #ifdef DEBUG
-    setSoftPwmDutyCycle(p_aux_heater_1, 35);
-    setSoftPwmDutyCycle(p_aux_heater_2, 65);
+    setSoftPwmDutyCycle(aux_heater_1, 35);
+    setSoftPwmDutyCycle(aux_heater_2, 65);
 #endif
     /* USER CODE END 2 */
 

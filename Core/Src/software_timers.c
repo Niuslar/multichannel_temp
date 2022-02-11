@@ -78,22 +78,17 @@ uint8_t startSoftPwmTimer(TIM_HandleTypeDef *p_timer)
 /**
  * @brief Register GPIO port and pin as software PWM.
  *
- * @param p_pwm_handler Pointer to a software PWM handler that will contain
- * registered pin. Note that pointer is to a constant value to prevent external
- * alteration.
+ * @param p_soft_pwm_id Pointer to variable that will hold the registered soft
+ * pwm id code
  * @param p_port GPIO port.
  * @param pin GPIO pin.
  * @return NULL if success, error code otherwise.
  */
-uint8_t registerSoftPwm(soft_pwm_handler_t **p_soft_pwm_handler,
+uint8_t registerSoftPwm(soft_pwm_id_t *p_soft_pwm_id,
                         GPIO_TypeDef *p_port,
                         uint32_t pin)
 {
-    // Shouldn't we initialise the pointer before checking it's NULL?
-    *p_soft_pwm_handler = &(registered_soft_pwm[instance_counter]);
-
-    // Or maybe we could simply remove this check for p_soft_pwm_handler
-    if ((*p_soft_pwm_handler == NULL) || (p_port == NULL))
+    if ((p_soft_pwm_id == NULL) && (p_port == NULL))
     {
         return ERROR_NULL_POINTER;
     }
@@ -111,16 +106,19 @@ uint8_t registerSoftPwm(soft_pwm_handler_t **p_soft_pwm_handler,
     registered_soft_pwm[instance_counter].p_port = p_port;
     registered_soft_pwm[instance_counter].pin = pin;
     registered_soft_pwm[instance_counter].duty_cycle = DEFAULT_DUTY_CYCLE;
+
+    *p_soft_pwm_id = instance_counter;
+
     instance_counter++;
     return NO_ERROR;
 }
 
 /**
  * @brief Set duty cycle for selected software timer
- * @param Pointer to soft pwm handler
+ * @param soft pwm id code
  * @retval None
  */
-void setSoftPwmDutyCycle(soft_pwm_handler_t *p_soft_pwm_h,
+void setSoftPwmDutyCycle(soft_pwm_id_t p_soft_pwm_id,
                          uint8_t duty_cycle_percent)
 {
     /* Check Duty Cycle is within a valid range. */
@@ -130,7 +128,7 @@ void setSoftPwmDutyCycle(soft_pwm_handler_t *p_soft_pwm_h,
         duty_cycle_percent = MAX_COUNT;
     }
 #endif
-    p_soft_pwm_h->duty_cycle = duty_cycle_percent;
+    registered_soft_pwm[p_soft_pwm_id].duty_cycle = duty_cycle_percent;
 }
 
 /**
@@ -151,7 +149,6 @@ void tickSoftPwm(TIM_HandleTypeDef *htim)
     for (uint8_t instance = 0; instance < instance_counter; instance++)
     {
         pin_state = GPIO_PIN_RESET;
-        // This should be <
         if (pwm_counter < registered_soft_pwm[instance].duty_cycle)
         {
             pin_state = GPIO_PIN_SET;
