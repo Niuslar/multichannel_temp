@@ -24,17 +24,7 @@ void tickSoftPwm(TIM_HandleTypeDef *htim);
  * counter < duty_cycle and low otherwise.
  *
  * In this case we use 100 "duty steps" to control the timers.
- * This means the counter goes from 0 to 100 and it restarts.
- * It also means that the PWM frequency is:
- *
- *  PWM Freq = Timer Freq. / 100;
- *
- *  Which for TIM6 is:
- *
- *  PWM Freq = 5000 / 100 = 50 Hz;
- *
- *  To change this frequency, change the counter period
- *  in the Device Configuration Tool.
+ * This means the counter goes from 0 to 99 and it restarts.
  */
 
 /**
@@ -61,7 +51,7 @@ uint8_t startSoftPwmTimer(TIM_HandleTypeDef *p_timer)
     p_software_timer = p_timer;
     /* Now need to register a callback to trigger on period elapse event and
      * start timer.*/
-    if (HAL_TIM_RegisterCallback(p_timer,
+    if (HAL_TIM_RegisterCallback(p_software_timer,
                                  HAL_TIM_PERIOD_ELAPSED_CB_ID,
                                  tickSoftPwm) != HAL_OK)
     {
