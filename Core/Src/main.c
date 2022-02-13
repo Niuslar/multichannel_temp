@@ -24,6 +24,7 @@
 #include "adc_data.h"
 #include "pid_control.h"
 #include "pwm.h"
+#include "soft_pwm.h"
 #include "telemetry.h"
 #include "temperature.h"
 #include "uart_com.h"
@@ -69,13 +70,16 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim21;
 TIM_HandleTypeDef htim22;
 
 /* USER CODE BEGIN PV */
-
 volatile uint8_t conv_cmplt_flag = 0;
 volatile uint8_t send_uart_flag = 0;
+
+soft_pwm_id_t aux_heater_1;
+soft_pwm_id_t aux_heater_2;
 
 /* Hardware PWM handlers and
  * configuration parameters for all channels */
@@ -98,6 +102,7 @@ static void MX_DMA_Init(void);
 static void MX_TIM21_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -170,9 +175,28 @@ int main(void)
     MX_TIM21_Init();
     MX_LPUART1_UART_Init();
     MX_USART2_UART_Init();
+    MX_TIM6_Init();
     /* USER CODE BEGIN 2 */
 
     startADC(&hadc);
+
+    /* setup soft PWM channels*/
+    startSoftPwmTimer(&htim6);
+
+    if (registerSoftPwm(&aux_heater_1, CONTROL_9_GPIO_Port, CONTROL_9_Pin) !=
+        NO_ERROR)
+    {
+        Error_Handler();
+    }
+    if (registerSoftPwm(&aux_heater_2, CONTROL_10_GPIO_Port, CONTROL_10_Pin) !=
+        NO_ERROR)
+    {
+        Error_Handler();
+    }
+#ifdef DEBUG
+    setSoftPwmDutyCycle(aux_heater_1, 35);
+    setSoftPwmDutyCycle(aux_heater_2, 65);
+#endif
 
     /*  Initialise PWM Handlers and start PWM */
     for (uint8_t channel = 0; channel < PWM_CHANNELS; channel++)
@@ -619,6 +643,42 @@ static void MX_TIM2_Init(void)
 
     /* USER CODE END TIM2_Init 2 */
     HAL_TIM_MspPostInit(&htim2);
+}
+
+/**
+ * @brief TIM6 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM6_Init(void)
+{
+    /* USER CODE BEGIN TIM6_Init 0 */
+
+    /* USER CODE END TIM6_Init 0 */
+
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    /* USER CODE BEGIN TIM6_Init 1 */
+
+    /* USER CODE END TIM6_Init 1 */
+    htim6.Instance = TIM6;
+    htim6.Init.Prescaler = 0;
+    htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim6.Init.Period = 6400 - 1;
+    htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN TIM6_Init 2 */
+
+    /* USER CODE END TIM6_Init 2 */
 }
 
 /**
